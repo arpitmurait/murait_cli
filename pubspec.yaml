@@ -1,9 +1,9 @@
 name: murait_cli
 description: A Flutter code generator CLI for GetX and BLoC architecture (with model and repository support).
 version: 0.0.1
-repository: https://github.com/yourname/murait_cli   # optional but recommended
-homepage: https://your-website.com                   # optional
-issue_tracker: https://github.com/yourname/murait_cli/issues  # optional
+repository: https://github.com/arpitmurait/murait_cli
+homepage: https://murait.com
+issue_tracker: https://github.com/arpitmurait/murait_cli/issues
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
