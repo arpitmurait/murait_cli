@@ -3,22 +3,25 @@ import 'utils.dart';
 
 class GetXGenerator {
   void createFeature(String name, {bool withModel = false, bool withRepo = false}) {
-    final folder = Directory('lib/app/modules/$name');
+    final folder = Directory('lib/screens/$name');
     if (!folder.existsSync()) {
       folder.createSync(recursive: true);
     }
+    final folder2 = Directory('lib/screens/$name/widgets');
+    if (!folder2.existsSync()) {
+      folder2.createSync(recursive: true);
+    }
 
     final files = {
-      'controllers/${name}_controller.dart': _controllerTemplate(name),
-      'bindings/${name}_binding.dart': _bindingTemplate(name),
-      'views/${name}_view.dart': _viewTemplate(name),
+      '${name}_controller.dart': _controllerTemplate(name),
+      '${name}_screen.dart': _viewTemplate(name),
     };
 
     if (withModel) {
-      files['models/${name}_model.dart'] = _modelTemplate(name);
+      files['data/model/${name}_model.dart'] = _modelTemplate(name);
     }
     if (withRepo) {
-      files['repositories/${name}_repository.dart'] = _repoTemplate(name);
+      files['data/repository/${name}_repository.dart'] = _repoTemplate(name);
     }
 
     files.forEach((path, content) {
@@ -39,24 +42,10 @@ class ${capitalize(name)}Controller extends GetxController {
 }
 ''';
 
-  String _bindingTemplate(String name) => '''
-import 'package:get/get.dart';
-import '../controllers/${name}_controller.dart';
-${_importIfRepo(name)}
-
-class ${capitalize(name)}Binding extends Bindings {
-  @override
-  void dependencies() {
-    Get.lazyPut<${capitalize(name)}Controller>(
-        () => ${capitalize(name)}Controller(${_repoInstance(name)}));
-  }
-}
-''';
-
   String _viewTemplate(String name) => '''
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/${name}_controller.dart';
+import '../${name}_controller.dart';
 
 class ${capitalize(name)}View extends GetView<${capitalize(name)}Controller> {
   const ${capitalize(name)}View({super.key});
@@ -95,7 +84,13 @@ class ${capitalize(name)}Model {
   String _repoTemplate(String name) => '''
 import '../models/${name}_model.dart';
 
-class ${capitalize(name)}Repository {
+abstract class ${capitalize(name)}Repository {
+  Future<${capitalize(name)}Model> fetchData();
+}
+
+class ${capitalize(name)}RepositoryImpl implements ${capitalize(name)}Repository {
+
+  @override
   Future<${capitalize(name)}Model> fetchData() async {
     // TODO: Replace with API/DB call
     await Future.delayed(const Duration(seconds: 1));
@@ -105,7 +100,7 @@ class ${capitalize(name)}Repository {
 ''';
 
   String _importIfRepo(String name) => '''
-import '../repositories/${name}_repository.dart';
+import '/data/repository/${name}_repository.dart';
 ''';
 
   String _repoField(String name) => '''
@@ -113,5 +108,4 @@ final ${capitalize(name)}Repository repository;
 ${capitalize(name)}Controller(this.repository);
 ''';
 
-  String _repoInstance(String name) => '${capitalize(name)}Repository()';
 }
