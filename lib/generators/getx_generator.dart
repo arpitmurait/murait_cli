@@ -18,17 +18,21 @@ class GetXGenerator {
     };
 
     if (withModel) {
-      files['data/model/${name}_model.dart'] = _modelTemplate(name);
+      File('lib/data/model/${name}_model.dart')
+        ..createSync(recursive: true)
+        ..writeAsStringSync(_modelTemplate(name));
     }
     if (withRepo) {
-      files['data/repository/${name}_repository.dart'] = _repoTemplate(name);
+      File('lib/data/repository/${name}_repository.dart')
+        ..createSync(recursive: true)
+        ..writeAsStringSync(_repoTemplate(name));
     }
 
     files.forEach((path, content) {
       File('${folder.path}/$path')
         ..createSync(recursive: true)
         ..writeAsStringSync(content);
-      print('✅ Created lib/app/modules/$name/$path');
+      print('✅ Created lib/$name/$path');
     });
   }
 
@@ -45,13 +49,14 @@ class ${capitalize(name)}Controller extends GetxController {
   String _viewTemplate(String name) => '''
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../${name}_controller.dart';
+import '${name}_controller.dart';
 
-class ${capitalize(name)}View extends GetView<${capitalize(name)}Controller> {
-  const ${capitalize(name)}View({super.key});
+class ${capitalize(name)}Screen extends StatelessWidget {
+  const ${capitalize(name)}Screen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.put(${capitalize(name)}Controller());
     return Scaffold(
       appBar: AppBar(title: const Text('${capitalize(name)}')),
       body: const Center(child: Text('${capitalize(name)}View')),
@@ -82,13 +87,16 @@ class ${capitalize(name)}Model {
 ''';
 
   String _repoTemplate(String name) => '''
-import '../models/${name}_model.dart';
+import '../model/${name}_model.dart';
+import '../../network/api_service.dart';
 
 abstract class ${capitalize(name)}Repository {
   Future<${capitalize(name)}Model> fetchData();
 }
 
 class ${capitalize(name)}RepositoryImpl implements ${capitalize(name)}Repository {
+  final ApiService apiService;
+  ${capitalize(name)}RepositoryImpl({required this.apiService});
 
   @override
   Future<${capitalize(name)}Model> fetchData() async {
@@ -104,8 +112,7 @@ import '/data/repository/${name}_repository.dart';
 ''';
 
   String _repoField(String name) => '''
-final ${capitalize(name)}Repository repository;
-${capitalize(name)}Controller(this.repository);
+  final ${capitalize(name)}Repository _repository = Get.find(tag: (${capitalize(name)}Repository).toString());
 ''';
 
 }
