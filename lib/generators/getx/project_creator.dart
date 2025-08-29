@@ -43,7 +43,7 @@ class ProjectGenerator {
 
     // Construct absolute paths to the template directories
     final templateLibPath = p.join(packageRoot, 'lib', 'template_lib');
-    final templateAssetsPath = p.join(packageRoot, 'template_assets');
+    final templateAssetsPath = p.join(packageRoot, 'lib',  'assets');
 
     final projectDir = Directory(projectName);
     if (await projectDir.exists()) {
