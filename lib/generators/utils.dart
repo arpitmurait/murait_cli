@@ -1,3 +1,11 @@
+class FirebaseServiceType {
+  static String core = 'core';
+  static String auth = 'auth';
+  static String firestore = 'firestore';
+  static String messaging = 'messaging';
+  static String analytics = 'analytics';
+  static String crashlytics = 'crashlytics';
+}
 
 /// Capitalizes the first letter of a string.
 /// Example: "home" -> "Home"
