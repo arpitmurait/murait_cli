@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import '../utils.dart';
 
 class Templates {
@@ -77,4 +79,72 @@ class ${capitalize(name)}RepositoryImpl implements ${capitalize(name)}Repository
 
   static String _repoField(String name) =>
       'final ${capitalize(name)}Repository _repository = Get.find(tag: (${capitalize(name)}Repository).toString());';
+
+
+  static Future<void> createPubspecFile(String projectName) async {
+    final content = _pubspecTemplate(projectName);
+    final file = File('$projectName/pubspec.yaml');
+    await file.writeAsString(content);
+  }
+
+  static String _pubspecTemplate(String name) => '''
+name: ${name.toLowerCase().replaceAll(' ', '_')}
+description: "A new Flutter project."
+publish_to: 'none' 
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0' # Updated SDK constraint for modern Dart
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
+  cupertino_icons: ^1.0.8
+  intl:
+  get: ^4.7.2
+  hive_flutter: ^2.0.0-dev
+  flutter_screenutil: ^5.9.3
+  cached_network_image: ^3.4.1
+  flutter_svg: ^2.2.0
+  fluttertoast: ^8.2.12
+  flutter_easyloading: ^3.0.5
+  connectivity_plus: ^6.1.5
+  dio: ^5.9.0
+  flutter_animate: ^4.5.2
+  rflutter_alert: ^2.0.7
+  h3m_shimmer_card: ^0.0.2
+  image_cropper: ^8.1.0
+  image_picker: ^1.2.0
+  logger: ^2.6.1
+  upgrader: ^11.5.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/
+    
+  # example:
+  # fonts:
+  #   - family: Poppins
+  #     fonts:
+  #       - asset: fonts/Poppins-Regular.ttf
+  #       - asset: fonts/Poppins-Italic.ttf
+  #         style: italic
+  
+''';
+
 }

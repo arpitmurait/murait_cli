@@ -4,6 +4,18 @@ A custom **Flutter/Dart CLI tool** to generate boilerplate code for **GetX** and
 Save time by scaffolding controllers, views, bindings, models, and repositories with a single command.
 
 ---
+**Installation directly from GitHub:**
+
+```bash
+dart pub global activate -sgit https://github.com/arpitmurait/murait_cli.git
+```
+After installation, they can use the `murait_cli` command from anywhere on their system, just like you do locally:
+
+```bash
+murait_cli create my_new_project
+cd my_new_project
+murait_cli make:getx home --with-repo
+```
 
 ## 🚀 Installation
 
@@ -12,6 +24,7 @@ Run directly without installing globally:
 
 ```bash
 dart run bin/murait_cli.dart make:getx home
+dart /Users/mac/Documents/cli/murait_cli/bin/murait_cli.dart  make:getx home2 --with-model --with-repo
 ```
 
 ### Global Installation

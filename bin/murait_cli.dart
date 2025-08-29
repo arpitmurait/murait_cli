@@ -1,6 +1,7 @@
 import 'package:args/args.dart';
 import 'package:murait_cli/generators/getx/getx_generator.dart';
 import 'package:murait_cli/generators/bloc_generator.dart';
+import 'package:murait_cli/generators/getx/project_creator.dart';
 
 void main(List<String> arguments) {
   final parser = ArgParser();
@@ -9,6 +10,8 @@ void main(List<String> arguments) {
     ..addFlag('with-model', negatable: false)
     ..addFlag('with-repo', negatable: false);
 
+  parser.addCommand('create:getx');
+
   parser.addCommand('make:bloc')
     ..addFlag('with-model', negatable: false)
     ..addFlag('with-repo', negatable: false);
@@ -16,6 +19,15 @@ void main(List<String> arguments) {
   final results = parser.parse(arguments);
 
   switch (results.command?.name) {
+    case 'create:getx':
+      final feature = results.command?.rest.first;
+      if (feature == null) {
+        print('❌ Please provide a feature name');
+        return;
+      }
+      ProjectGenerator().createProject(feature,);
+      break;
+
     case 'make:getx':
       final feature = results.command?.rest.first;
       if (feature == null) {
