@@ -1,24 +1,66 @@
 import 'dart:io';
 import 'package:murait_cli/generators/getx/templates.dart';
+import 'package:path/path.dart' as p;
 import 'package:process/process.dart';
 
 class ProjectGenerator {
   // The path inside your CLI tool where the boilerplate 'lib' folder should be located.
   final templateLibPath = 'lib/template_lib';
   final templateAssetsPath = 'lib/assets';
+  String? _packageRoot;
+
+  /// Finds the root directory of the installed murait_cli package.
+  Future<String?> _findPackageRoot() async {
+    if (_packageRoot != null) return _packageRoot;
+
+    // Get the path of the running script.
+    var scriptUri = Platform.script;
+    var scriptPath = scriptUri.toFilePath(windows: Platform.isWindows);
+
+    var currentDir = Directory(p.dirname(scriptPath));
+
+    // Traverse up the directory tree from the script's location
+    // until a pubspec.yaml file is found. This is the package root.
+    while (await currentDir.parent.exists()) {
+      final pubspecFile = File(p.join(currentDir.path, 'pubspec.yaml'));
+      if (await pubspecFile.exists()) {
+        _packageRoot = currentDir.path;
+        return _packageRoot;
+      }
+      currentDir = currentDir.parent;
+    }
+
+    return null;
+  }
 
   Future<void> createProject(String projectName) async {
+    final packageRoot = await _findPackageRoot();
+    if (packageRoot == null) {
+      print('❌ Error: Could not determine the package root directory of the CLI tool.');
+      print('➡️ This might happen if the CLI is not installed correctly. Try re-installing it.');
+      return;
+    }
+
+    // Construct absolute paths to the template directories
+    final templateLibPath = p.join(packageRoot, 'lib', 'template_lib');
+    final templateAssetsPath = p.join(packageRoot, 'template_assets');
+
     final projectDir = Directory(projectName);
     if (await projectDir.exists()) {
       print('❌ Error: Directory "$projectName" already exists.');
       return;
     }
 
-    final templateDir = Directory(templateLibPath);
-    if (!await templateDir.exists() || templateDir.listSync().isEmpty) {
+    final templateLibDir = Directory(templateLibPath);
+    if (!await templateLibDir.exists() || templateLibDir.listSync().isEmpty) {
       print('❌ Error: Template directory not found or is empty at "$templateLibPath".');
-      print('➡️ Please create it and place your boilerplate "lib" folder contents inside.');
+      print('➡️ Please ensure the "lib/template_lib" folder exists in your GitHub repository.');
       return;
+    }
+
+    final templateAssetsDir = Directory(templateAssetsPath);
+    if (!await templateAssetsDir.exists()) {
+      print('⚠️  Warning: Template assets directory not found at "$templateAssetsPath". An empty assets folder will be created.');
     }
 
     print('🚀 Creating a new Flutter project "$projectName"... (This might take a moment)');
@@ -44,9 +86,8 @@ class ProjectGenerator {
     print('✨ Copying boilerplate from "$templateLibPath"...');
     final newLibDir = Directory('$projectName/lib');
     await newLibDir.create();
-    await _copyDirectory(templateDir, newLibDir);
+    await _copyDirectory(templateLibDir, newLibDir);
 
-    final templateAssetsDir = Directory(templateAssetsPath);
     if (!await templateAssetsDir.exists() || templateAssetsDir.listSync().isEmpty) {
       print('❌ Error: Template directory not found or is empty at "$templateAssetsPath".');
       print('➡️ Please create it and place your boilerplate "lib" folder contents inside.');
