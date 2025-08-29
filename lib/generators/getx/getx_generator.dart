@@ -1,5 +1,6 @@
 import 'dart:io';
-import '../utils.dart';
+import 'package:murait_cli/generators/utils.dart';
+
 import 'templates.dart';
 
 class GetXGenerator {
@@ -69,6 +70,7 @@ class GetXGenerator {
       print('⚠️ Route for $name already exists in app_routes.dart.');
       return;
     }
+    // Add the new route string just before the closing brace of the class.
     final newRoute = "  static const $name = '/$name';\n}";
     content = content.replaceAll(RegExp(r'}\s*$'), newRoute);
 
@@ -83,29 +85,55 @@ class GetXGenerator {
       return;
     }
 
-    String content = file.readAsStringSync();
+    List<String> lines = file.readAsLinesSync();
 
-    // Add import if not already present
-    final newImport = "import '../screens/${name}/${name}_screen.dart';\n";
-    if (!content.contains(newImport)) {
-      content = content.replaceFirst(RegExp(r"part 'app_routes.dart';"), "part 'app_routes.dart';\n$newImport");
+    // --- 1. Handle Import Statement ---
+    final newImport = "import '../screens/$name/${name}_screen.dart';";
+    bool importExists = lines.any((line) => line.trim() == newImport);
+
+    if (!importExists) {
+      int partIndex = lines.indexWhere((line) => line.contains("part 'app_routes.dart';"));
+      if (partIndex != -1) {
+        // Insert the import right before the 'part' directive.
+        lines.insert(partIndex, newImport);
+      } else {
+        // Fallback: find the last import and insert after it.
+        int lastImportIndex = lines.lastIndexWhere((line) => line.trim().startsWith("import '"));
+        if (lastImportIndex != -1) {
+          lines.insert(lastImportIndex + 1, newImport);
+        } else {
+          // Absolute fallback: insert at the top.
+          lines.insert(0, newImport);
+        }
+      }
+    } else {
+      print('⚠️ Import for $name already exists in app_pages.dart.');
     }
 
-    // Add GetPage if not already present
-    if (content.contains("name: AppRoutes.$name,")) {
-      print('⚠️ GetPage for $name already exists in app_pages.dart.');
-      return;
-    }
-    final newPage = '''
+    // --- 2. Handle GetPage Entry ---
+    final newPageEntry = '''
     GetPage(
       name: AppRoutes.$name,
       page: () => ${capitalize(name)}Screen(),
-    ),
-  ];
-''';
-    content = content.replaceAll(RegExp(r'\];\s*$'), newPage);
+    ),''';
+    bool pageExists = lines.any((line) => line.contains("name: AppRoutes.$name,"));
 
-    file.writeAsStringSync(content);
-    print('✅ Updated lib/routes/app_pages.dart');
+    if (!pageExists) {
+      int routesListEndIndex = lines.lastIndexWhere((line) => line.trim() == '];');
+
+      if (routesListEndIndex != -1) {
+        // Insert the new GetPage block before the closing bracket of the list.
+        lines.insert(routesListEndIndex, newPageEntry);
+      } else {
+        print('❌ Error: Could not find the closing `];` of the routes list in app_pages.dart.');
+        return; // Stop if we can't find the insertion point
+      }
+    } else {
+      print('⚠️ GetPage for $name already exists in app_pages.dart.');
+    }
+
+    // --- 3. Write Updated Content Back to File ---
+    file.writeAsStringSync(lines.join('\n'));
+    print('✅ Updated lib/routes/app_pages.dart successfully.');
   }
 }

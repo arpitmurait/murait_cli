@@ -1,4 +1,3 @@
-/// Utility helpers for murait_cli code generation.
 
 /// Capitalizes the first letter of a string.
 /// Example: "home" -> "Home"
