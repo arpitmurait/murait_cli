@@ -1,5 +1,5 @@
 import 'package:args/args.dart';
-import 'package:murait_cli/generators/getx_generator.dart';
+import 'package:murait_cli/generators/getx/getx_generator.dart';
 import 'package:murait_cli/generators/bloc_generator.dart';
 
 void main(List<String> arguments) {
