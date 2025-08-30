@@ -12,9 +12,9 @@ dart pub global activate -sgit https://github.com/arpitmurait/murait_cli.git
 After installation, they can use the `murait_cli` command from anywhere on their system, just like you do locally:
 
 ```bash
-murait_cli create:getx my_new_project
+murait_cli create my_awesome_app
 cd my_new_project
-murait_cli make:getx home --with-repo --with-model
+murait_cli add screen home --with-repo --with-model
 ```
 
 ## 🚀 Installation

@@ -1,6 +1,7 @@
 import 'package:args/command_runner.dart';
 import '../utils.dart';
 import 'firebase_generator.dart';
+import 'project_creator.dart';
 
 class FirebaseCommand extends Command<void> {
   @override
