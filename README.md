@@ -17,7 +17,7 @@ cd my_new_project
 murait_cli add screen home --with-repo --with-model
 ```
 
-## 🚀 Installation
+## 🚀 _Installation_
 
 ### Local Run
 Run directly without installing globally:
