@@ -12,7 +12,6 @@ class FirebaseGenerator {
     FirebaseServiceType.auth: 'firebase_auth: ^6.0.1',
     FirebaseServiceType.firestore: 'cloud_firestore: ^6.0.0',
     FirebaseServiceType.messaging: 'firebase_messaging: ^16.0.0', // For Notifications
-    FirebaseServiceType.messaging: 'flutter_local_notifications: ^19.4.1', // For Notifications
     FirebaseServiceType.analytics: 'firebase_analytics: ^12.0.0',
     FirebaseServiceType.crashlytics: 'firebase_crashlytics: ^5.0.0',
   };
@@ -54,6 +53,14 @@ class FirebaseGenerator {
         .where((item) => item != null)
         .cast<String>()
         .toList();
+
+    if(services.contains(FirebaseServiceType.auth)){
+      dependenciesToAdd.add('google_sign_in: ^7.1.1');
+      dependenciesToAdd.add('sign_in_with_apple: ^7.0.1');
+    }
+    if(services.contains(FirebaseServiceType.messaging)){
+      dependenciesToAdd.add('flutter_local_notifications: ^19.4.1');
+    }
 
     // Check and add dependencies if they don't exist.
     int addedCount = 0;
