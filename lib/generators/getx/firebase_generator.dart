@@ -12,6 +12,7 @@ class FirebaseGenerator {
     FirebaseServiceType.auth: 'firebase_auth: ^6.0.1',
     FirebaseServiceType.firestore: 'cloud_firestore: ^6.0.0',
     FirebaseServiceType.messaging: 'firebase_messaging: ^16.0.0', // For Notifications
+    FirebaseServiceType.messaging: 'flutter_local_notifications: ^19.4.1', // For Notifications
     FirebaseServiceType.analytics: 'firebase_analytics: ^12.0.0',
     FirebaseServiceType.crashlytics: 'firebase_crashlytics: ^5.0.0',
   };

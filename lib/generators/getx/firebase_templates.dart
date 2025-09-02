@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'package:path/path.dart' as p;
 import '../utils.dart';
 
 class FirebaseTemplates {
@@ -43,33 +43,9 @@ class FirebaseTemplates {
 
     // Add service-specific code if it's missing.
     if (services.contains(FirebaseServiceType.analytics)) {
-      // importsToAdd.add("import 'package:firebase_analytics/firebase_analytics.dart';");
-      // if (!content.contains('final FirebaseAnalytics firebaseAnalytics')) {
-      //   topLevelCode.add('final FirebaseAnalytics firebaseAnalytics = FirebaseAnalytics.instance;');
-      // }
       _injectAnalyticsIntoRoutes();
     }
 
-    // --- 4. NEW: Inject Navigator Observer for Analytics ---
-    // if (services.contains(FirebaseServiceType.analytics) && !content.contains('FirebaseAnalyticsObserver')) {
-    //   // This regex finds MaterialApp( or GetMaterialApp(
-    //   final appWidgetRegex = RegExp(r'(MaterialApp|GetMaterialApp)\s*\(');
-    //   if (content.contains(appWidgetRegex)) {
-    //     print('✏️  Injecting FirebaseAnalyticsObserver into MaterialApp...');
-    //     content = content.replaceFirstMapped(appWidgetRegex, (match) {
-    //       final originalMatch = match.group(0)!; // This is "MaterialApp(" or "GetMaterialApp("
-    //       const observerCode = '''
-    //       navigatorObservers: [
-    //         FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
-    //       ],
-    //     ''';
-    //       // Add the observer right after the opening parenthesis
-    //       return '$originalMatch\n$observerCode';
-    //     });
-    //   } else {
-    //     print('⚠️ Warning: Could not find MaterialApp or GetMaterialApp to inject FirebaseAnalyticsObserver.');
-    //   }
-    // }
     if (services.contains(FirebaseServiceType.crashlytics) && !content.contains('FirebaseCrashlytics.instance')) {
       importsToAdd.add("import 'package:firebase_crashlytics/firebase_crashlytics.dart';");
       importsToAdd.add("import 'package:flutter/foundation.dart';");
@@ -84,14 +60,12 @@ class FirebaseTemplates {
 
     if (services.contains(FirebaseServiceType.messaging) && !content.contains('_firebaseMessagingBackgroundHandler')) {
       importsToAdd.add("import 'package:firebase_messaging/firebase_messaging.dart';");
-      topLevelCode.add('');
-      topLevelCode.add("@pragma('vm:entry-point')");
-      topLevelCode.add('Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {');
-      topLevelCode.add('  await Firebase.initializeApp();');
-      topLevelCode.add('  print("Handling a background message: \${message.messageId}");');
-      topLevelCode.add('}');
-      mainFunctionCode.add('  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);');
+      importsToAdd.add("import 'core/utils/notification_service.dart';");
+      mainFunctionCode.add('  await NotificationService().initialize();');
       mainFunctionCode.add('');
+      _setupPushNotifications();
+      _updateBuildGradle();
+      _updateAndroidManifest();
     }
 
     // --- 2. Inject and Clean ---
@@ -131,7 +105,6 @@ class FirebaseTemplates {
     mainFile.writeAsStringSync(content);
     print('✅ lib/main.dart updated successfully.');
   }
-
 
   static Future<void> _injectAnalyticsIntoRoutes() async {
     final appPagesFile = File('lib/routes/app_pages.dart');
@@ -206,4 +179,123 @@ void registerAnalyticsEvent({required String name}) {
     await appPagesFile.writeAsString(content);
     print('   -> Successfully injected analytics logging into GetPage routes.');
   }
+
+  static Future<void> _setupPushNotifications() async {
+    // 1. Copy the utility file from templates to the project
+    final scriptPath = Platform.script.toFilePath();
+    final templatePath = p.normalize(p.join(p.dirname(scriptPath), '..', 'lib', 'templates', 'core', 'notification_service.dart'));
+    final templateFile = File(templatePath);
+
+    final targetDir = Directory('lib/core/utils');
+    if (!await targetDir.exists()) {
+      await targetDir.create(recursive: true);
+    }
+    final targetFile = File('lib/core/utils/notification_service.dart');
+    targetFile..createSync(recursive: true)..writeAsStringSync(await templateFile.readAsString());
+    print('   -> Updated lib/main.dart to initialize NotificationService.');
+  }
+
+  static Future<void> _updateAndroidManifest() async {
+    final manifestFile = File('android/app/src/main/AndroidManifest.xml');
+    if (!await manifestFile.exists()) {
+      print('⚠️ Warning: AndroidManifest.xml not found. Could not add notification meta-data.');
+      return;
+    }
+    print('   -> Updating AndroidManifest.xml for push notifications...');
+
+    var lines = await manifestFile.readAsLines();
+
+    const channelIdMetaData = '        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="primary_channel" />';
+    const iconMetaData = '        <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@mipmap/ic_launcher" />';
+
+    if (lines.any((line) => line.contains('com.google.firebase.messaging.default_notification_channel_id'))) {
+      print('   -> Notification meta-data already exists in AndroidManifest.xml.');
+      return;
+    }
+
+    final activityEndIndex = lines.lastIndexWhere((line) => line.trim().startsWith('</activity>'));
+
+    if (activityEndIndex != -1) {
+      lines.insert(activityEndIndex, iconMetaData);
+      lines.insert(activityEndIndex, channelIdMetaData);
+      await manifestFile.writeAsString(lines.join('\n'));
+      print('   -> Added notification meta-data to AndroidManifest.xml.');
+    } else {
+      print('⚠️ Warning: Could not find a suitable location in AndroidManifest.xml to add meta-data.');
+    }
+  }
+
+  static Future<void> _updateBuildGradle() async {
+    final buildGradleFile = File('android/app/build.gradle.kts');
+    if (!await buildGradleFile.exists()) {
+      print('⚠️ Warning: android/app/build.gradle not found. Could not apply required settings.');
+      return;
+    }
+    print('   -> Updating android/app/build.gradle for Firebase compatibility...');
+
+    var lines = await buildGradleFile.readAsLines();
+    var contentModified = false;
+
+    // --- Update minSdkVersion and add multiDexEnabled ---
+    final defaultConfigIndex = lines.indexWhere((line) => line.trim().startsWith('defaultConfig'));
+    if (defaultConfigIndex != -1) {
+      final defaultConfigEndIndex = lines.indexWhere((line) => line.trim() == '}', defaultConfigIndex);
+      if (defaultConfigEndIndex != -1) {
+        // Update minSdkVersion within the block
+        for (int i = defaultConfigIndex; i < defaultConfigEndIndex; i++) {
+          if (lines[i].trim().startsWith('minSdk')) {
+            if (!lines[i].contains('23')) {
+              lines[i] = '        minSdk = 23';
+              print('   -> Set minSdk to 23.');
+              contentModified = true;
+            }
+            break;
+          }
+        }
+        // Add multiDexEnabled if not present
+        if (!lines.any((line) => line.contains('multiDexEnabled'))) {
+          lines.insert(defaultConfigEndIndex, '        multiDexEnabled = true');
+          print('   -> Enabled multiDex.');
+          contentModified = true;
+        }
+      }
+    }
+
+    // --- Enable coreLibraryDesugaring ---
+    final compileOptionsIndex = lines.indexWhere((line) => line.trim().startsWith('compileOptions'));
+    if (compileOptionsIndex != -1) {
+      final compileOptionsEndIndex = lines.indexWhere((line) => line.trim() == '}', compileOptionsIndex);
+      if (compileOptionsEndIndex != -1 && !lines.any((line) => line.contains('coreLibraryDesugaringEnabled'))) {
+        lines.insert(compileOptionsEndIndex, '        coreLibraryDesugaringEnabled = true');
+        print('   -> Enabled coreLibraryDesugaring.');
+        contentModified = true;
+      }
+    }
+
+    // --- Add desugaring dependency ---
+    final dependenciesIndex = lines.indexWhere((line) => line.trim().startsWith('dependencies'));
+    if (dependenciesIndex != -1) {
+      if (!lines.any((line) => line.contains('desugar_jdk_libs'))) {
+        lines.insert(dependenciesIndex + 1, '    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")');
+        print('   -> Added desugar_jdk_libs dependency.');
+        contentModified = true;
+      }
+    } else {
+      // If dependencies block does not exist, add it at the end of the file.
+      lines.add('');
+      lines.add('dependencies {');
+      lines.add('    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")');
+      lines.add('}');
+      print('   -> Created dependencies block and added desugar_jdk_libs.');
+      contentModified = true;
+    }
+
+    if (contentModified) {
+      await buildGradleFile.writeAsString(lines.join('\n'));
+      print('   -> build.gradle updated successfully.');
+    } else {
+      print('   -> build.gradle already contains the required settings.');
+    }
+  }
+
 }
