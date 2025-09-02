@@ -65,6 +65,7 @@ class FirebaseTemplates {
       mainFunctionCode.add('');
       _setupPushNotifications();
       _updateBuildGradle();
+      _updateBuildGradleKts();
       _updateAndroidManifest();
     }
 
@@ -226,6 +227,78 @@ void registerAnalyticsEvent({required String name}) {
   }
 
   static Future<void> _updateBuildGradle() async {
+    final buildGradleFile = File('android/app/build.gradle');
+    if (!await buildGradleFile.exists()) {
+      print('⚠️ Warning: android/app/build.gradle not found. Could not apply required settings.');
+      return;
+    }
+    print('   -> Updating android/app/build.gradle for Firebase compatibility...');
+
+    var lines = await buildGradleFile.readAsLines();
+    var contentModified = false;
+
+    // --- Update minSdkVersion and add multiDexEnabled ---
+    final defaultConfigIndex = lines.indexWhere((line) => line.trim().startsWith('defaultConfig'));
+    if (defaultConfigIndex != -1) {
+      final defaultConfigEndIndex = lines.indexWhere((line) => line.trim() == '}', defaultConfigIndex);
+      if (defaultConfigEndIndex != -1) {
+        // Update minSdkVersion within the block
+        for (int i = defaultConfigIndex; i < defaultConfigEndIndex; i++) {
+          if (lines[i].trim().startsWith('minSdkVersion')) {
+            if (!lines[i].contains('23')) {
+              lines[i] = '        minSdkVersion 23';
+              print('   -> Set minSdkVersion to 23.');
+              contentModified = true;
+            }
+            break;
+          }
+        }
+        // Add multiDexEnabled if not present
+        if (!lines.any((line) => line.contains('multiDexEnabled'))) {
+          lines.insert(defaultConfigEndIndex, '        multiDexEnabled true');
+          print('   -> Enabled multiDex.');
+          contentModified = true;
+        }
+      }
+    }
+
+    final compileOptionsIndex = lines.indexWhere((line) => line.trim().startsWith('compileOptions'));
+    if (compileOptionsIndex != -1) {
+      final compileOptionsEndIndex = lines.indexWhere((line) => line.trim() == '}', compileOptionsIndex);
+      if (compileOptionsEndIndex != -1 && !lines.any((line) => line.contains('coreLibraryDesugaringEnabled'))) {
+        lines.insert(compileOptionsEndIndex, '        coreLibraryDesugaringEnabled true');
+        print('   -> Enabled coreLibraryDesugaring.');
+        contentModified = true;
+      }
+    }
+
+    // --- Add desugaring dependency ---
+    final dependenciesIndex = lines.indexWhere((line) => line.trim().startsWith('dependencies'));
+    if (dependenciesIndex != -1) {
+      if (!lines.any((line) => line.contains('desugar_jdk_libs'))) {
+        lines.insert(dependenciesIndex + 1, "    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'");
+        print('   -> Added desugar_jdk_libs dependency.');
+        contentModified = true;
+      }
+    } else {
+      // If dependencies block does not exist, add it at the end of the file.
+      lines.add('');
+      lines.add('dependencies {');
+      lines.add("    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'");
+      lines.add('}');
+      print('   -> Created dependencies block and added desugar_jdk_libs.');
+      contentModified = true;
+    }
+
+    if (contentModified) {
+      await buildGradleFile.writeAsString(lines.join('\n'));
+      print('   -> build.gradle updated successfully.');
+    } else {
+      print('   -> build.gradle already contains the required settings.');
+    }
+  }
+
+  static Future<void> _updateBuildGradleKts() async {
     final buildGradleFile = File('android/app/build.gradle.kts');
     if (!await buildGradleFile.exists()) {
       print('⚠️ Warning: android/app/build.gradle not found. Could not apply required settings.');
