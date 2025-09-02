@@ -5,6 +5,7 @@ class FirebaseServiceType {
   static String messaging = 'messaging';
   static String analytics = 'analytics';
   static String crashlytics = 'crashlytics';
+  static String ads = 'ads';
 }
 
 /// Capitalizes the first letter of a string.

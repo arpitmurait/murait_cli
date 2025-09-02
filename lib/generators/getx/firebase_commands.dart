@@ -16,6 +16,7 @@ class FirebaseCommand extends Command<void> {
     addSubcommand(FirebaseNotificationsCommand());
     addSubcommand(FirebaseAnalyticsCommand());
     addSubcommand(FirebaseCrashlyticsCommand());
+    addSubcommand(FirebaseAdsCommand());
   }
 }
 
@@ -90,6 +91,18 @@ class FirebaseCrashlyticsCommand extends Command<void> {
   @override
   void run() {
     FirebaseGenerator().addServices([FirebaseServiceType.crashlytics]);
+  }
+}
+
+class FirebaseAdsCommand extends Command<void> {
+  @override
+  final name = FirebaseServiceType.ads;
+  @override
+  final description = 'Adds Firebase Ads.';
+
+  @override
+  void run() {
+    FirebaseGenerator().addServices([FirebaseServiceType.ads]);
   }
 }
 

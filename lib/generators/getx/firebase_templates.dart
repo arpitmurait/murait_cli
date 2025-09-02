@@ -72,6 +72,18 @@ class FirebaseTemplates {
       _updateAndroidManifest();
     }
 
+    if (services.contains(FirebaseServiceType.ads)) {
+      importsToAdd.add("import 'package:flutter_native_ad/flutter_native_ad.dart';");
+      importsToAdd.add("import 'core/utils/ad_config.dart';");
+      mainFunctionCode.add('  await AdConfig.init();');
+      mainFunctionCode.add('  try{');
+      mainFunctionCode.add('    await FlutterNativeAd.init();');
+      mainFunctionCode.add('  } catch (e) {}');
+      mainFunctionCode.add('');
+      _setupAds('ad_config.dart');
+      _setupAds('ads_helper.dart');
+    }
+
     // --- 2. Inject and Clean ---
 
     // FINAL FIX: Remove any old instance of ensureInitialized() to prevent duplicates.
@@ -195,6 +207,21 @@ void registerAnalyticsEvent({required String name}) {
       await targetDir.create(recursive: true);
     }
     final targetFile = File('lib/core/utils/notification_service.dart');
+    targetFile..createSync(recursive: true)..writeAsStringSync(await templateFile.readAsString());
+    print('   -> Updated lib/main.dart to initialize NotificationService.');
+  }
+
+  static Future<void> _setupAds(String fileName) async {
+    // 1. Copy the utility file from templates to the project
+    final scriptPath = Platform.script.toFilePath();
+    final templatePath = p.normalize(p.join(p.dirname(scriptPath), '..', 'lib', 'templates', 'core', fileName));
+    final templateFile = File(templatePath);
+
+    final targetDir = Directory('lib/core/utils');
+    if (!await targetDir.exists()) {
+      await targetDir.create(recursive: true);
+    }
+    final targetFile = File('lib/core/utils/$fileName');
     targetFile..createSync(recursive: true)..writeAsStringSync(await templateFile.readAsString());
     print('   -> Updated lib/main.dart to initialize NotificationService.');
   }
@@ -531,7 +558,7 @@ void registerAnalyticsEvent({required String name}) {
       }
     }
 
-
+    _printSocialAuthInstructions();
     if (contentModified) {
       await authRepoFile.writeAsString(lines.join('\n'));
       print('   -> Updated lib/data/repository/auth_repository.dart successfully.');
