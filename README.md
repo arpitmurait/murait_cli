@@ -1,167 +1,148 @@
-# 📦 murait_cli
+# Murait CLI
 
-A custom **Flutter/Dart CLI tool** to generate boilerplate code for **GetX** and **BLoC** architectures following best practices.  
-Save time by scaffolding controllers, views, bindings, models, and repositories with a single command.
+<p align="center">
+  <img src="https://img.shields.io/badge/version-1.0.0-blue.svg" alt="Version">
+  <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
+</p>
 
----
-**Installation directly from GitHub:**
+A powerful CLI tool to supercharge your Flutter workflow. Instantly scaffold new projects with a production-ready GetX architecture, and generate screens, models, and repositories with a single command.
+
+## 🚀 Get Started
+
+### Installation
+
+You can install murait_cli directly from GitHub. Just make sure you have the Dart SDK installed.
 
 ```bash
 dart pub global activate -sgit https://github.com/arpitmurait/murait_cli.git
 ```
-After installation, they can use the `murait_cli` command from anywhere on their system, just like you do locally:
+
+After installation, you can use the `murait_cli` command from anywhere on your system.
+
+## ✨ Features & Commands
+
+Here's a breakdown of everything you can do with Murait CLI.
+
+### 1. Create a New Project
+
+Kickstart a new Flutter project with your complete GetX boilerplate, including all dependencies, assets, and folder structures.
+
+```bash
+murait_cli create <project_name>
+```
+
+👉 **Example:**
 
 ```bash
 murait_cli create my_awesome_app
-cd my_new_project
-murait_cli add screen home --with-repo --with-model
 ```
 
-## 🚀 _Installation_
+This command creates a new Flutter project named `my_awesome_app` and replaces the default `lib` and `assets` folders with your production-ready templates.
 
-### Local Run
-Run directly without installing globally:
+### 2. Add Components to Your Project
+
+Once you're inside a project folder, you can use the `add` command to generate new components.
+
+#### Add a New Screen
+
+This command creates a new screen with its own controller and a widgets folder. It also automatically updates your `app_routes.dart` and `app_pages.dart` files.
 
 ```bash
-dart run bin/murait_cli.dart make:getx home
-dart /Users/mac/Documents/cli/murait_cli/bin/murait_cli.dart  make:getx home2 --with-model --with-repo
+murait_cli add screen <screen_name> [--with-repo]
 ```
 
-### Global Installation
-Activate globally so you can run from anywhere:
+`--with-repo`: An optional flag to also generate a matching model and repository for the screen.
+
+👉 **Example (Screen only):**
 
 ```bash
-dart pub global activate --source path ./murait_cli
+murait_cli add screen profile
 ```
 
-Now you can use it like any CLI:
+This creates:
+- `lib/screens/profile/profile_screen.dart`
+- `lib/screens/profile/profile_controller.dart`
+- `lib/screens/profile/widgets/`
+- Updates your routing files
+
+👉 **Example (Screen with Model & Repository):**
 
 ```bash
-murait_cli make:getx home
+murait_cli add screen product --with-repo
 ```
 
----
+This creates all of the above, plus:
+- `lib/data/model/product_model.dart`
+- `lib/data/repository/product_repository.dart`
 
-## 🛠️ Commands
+#### Add a New Model
 
-### Generate **GetX** Module
-```bash
-murait_cli make:getx <feature>
-```
-
-👉 Example:
-```bash
-murait_cli make:getx home
-```
-
-Creates:
-```
-lib/app/modules/home/
- ├─ controllers/home_controller.dart
- ├─ bindings/home_binding.dart
- └─ views/home_view.dart
-```
-
----
-
-### Generate **GetX** Module with Model + Repository
-```bash
-murait_cli make:getx <feature> --with-model --with-repo
-```
-
-👉 Example:
-```bash
-murait_cli make:getx user --with-model --with-repo
-```
-
-Creates:
-```
-lib/app/modules/user/
- ├─ controllers/user_controller.dart
- ├─ bindings/user_binding.dart
- ├─ views/user_view.dart
- ├─ models/user_model.dart
- └─ repositories/user_repository.dart
-```
-
----
-
-### Generate **BLoC** Module
-```bash
-murait_cli make:bloc <feature>
-```
-
-👉 Example:
-```bash
-murait_cli make:bloc auth
-```
-
-Creates:
-```
-lib/app/modules/auth/
- ├─ bloc/auth_bloc.dart
- ├─ bloc/auth_event.dart
- ├─ bloc/auth_state.dart
- └─ view/auth_view.dart
-```
-
----
-
-### Generate **BLoC** Module with Model + Repository
-```bash
-murait_cli make:bloc <feature> --with-model --with-repo
-```
-
-👉 Example:
-```bash
-murait_cli make:bloc product --with-model --with-repo
-```
-
-Creates:
-```
-lib/app/modules/product/
- ├─ bloc/product_bloc.dart
- ├─ bloc/product_event.dart
- ├─ bloc/product_state.dart
- ├─ view/product_view.dart
- ├─ models/product_model.dart
- └─ repositories/product_repository.dart
-```
-
----
-
-## ⚡ Utilities
-
-The CLI automatically:
-- Formats names into **PascalCase, snake_case, kebab-case** as needed.
-- Ensures valid Dart class names.
-- Creates missing directories automatically.
-
----
-
-## 📖 Usage Help
-Run without arguments to see usage:
+Quickly generate a new model file in `lib/data/model/`.
 
 ```bash
-murait_cli
+murait_cli add model <model_name>
 ```
 
-Output:
+👉 **Example:**
+
+```bash
+murait_cli add model user
 ```
-Usage:
-  murait_cli make:getx <feature> [--with-model] [--with-repo]
-  murait_cli make:bloc <feature> [--with-model] [--with-repo]
+
+This creates `lib/data/model/user_model.dart`.
+
+#### Add a New Repository
+
+Quickly generate a new repository file in `lib/data/repository/`.
+
+```bash
+murait_cli add repository <repository_name>
 ```
 
----
+👉 **Example:**
 
-## 📌 Roadmap
-- [ ] Add Service & Provider generators
-- [ ] Support Clean Architecture layers
-- [ ] Interactive prompts (`murait_cli new module`)
+```bash
+murait_cli add repository cart
+```
 
----
+This creates `lib/data/repository/cart_repository.dart`.
 
-## 👨‍💻 Author
-**Arpit Murait** – Flutter Expert  
-📧 Contact: arpit.murait@example.com  
+### 3. Integrate Firebase Services
+
+Add and configure Firebase services with a single command. The CLI handles adding dependencies and required boilerplate code.
+
+```bash
+murait_cli add firebase <service_name>
+```
+
+**Available services:**
+- `all`: Installs Auth, Analytics, Notifications, and Crashlytics
+- `auth`: Installs Firebase Auth with Google and Apple Sign-In
+- `notification`: Installs Firebase Cloud Messaging
+- `analytics`: Installs Firebase Analytics and auto-logs screen views
+- `crashlytics`: Installs Firebase Crashlytics
+- `ads`: Installs Google Mobile Ads SDK
+
+👉 **Example:**
+
+```bash
+murait_cli add firebase auth
+```
+
+This adds the necessary packages for Firebase Auth and prints the required platform-specific setup steps for you to follow.
+
+### 4. Add Common Utilities
+
+Add pre-configured utility functions to your project.
+
+#### Add Share Functionality
+
+```bash
+murait_cli add share
+```
+
+This adds the `share_plus` package and injects a `shareApp()` method into your `lib/core/utils/utils.dart` file.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE.md file for details.
