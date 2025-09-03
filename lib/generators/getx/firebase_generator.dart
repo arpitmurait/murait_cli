@@ -62,7 +62,6 @@ class FirebaseGenerator {
       dependenciesToAdd.add('flutter_local_notifications: ^19.4.1');
     }
     if(services.contains(FirebaseServiceType.ads)){
-
       dependenciesToAdd.add('    url: https://github.com/Khuntarpit/flutter_native_ad.git');
       dependenciesToAdd.add('  git:');
       dependenciesToAdd.add('flutter_native_ad:');

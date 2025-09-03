@@ -14,6 +14,7 @@ void main(List<String> arguments) {
     //    This is the key step. You are "adding" your FirebaseCommand to the runner.
     //    The runner now knows about 'firebase' and all its subcommands.
     runner.addCommand(AddCommand());
+    runner.addCommand(ShareAppCommand());
     runner.addCommand(CreateCommand());
     runner.addCommand(FirebaseCommand());
     runner.run(arguments);

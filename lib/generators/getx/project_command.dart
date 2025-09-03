@@ -2,6 +2,7 @@ import 'package:args/command_runner.dart';
 
 import 'getx_generator.dart';
 import 'project_creator.dart';
+import 'util_generator.dart';
 
 class AddCommand extends Command<void> {
   @override
@@ -10,6 +11,7 @@ class AddCommand extends Command<void> {
   final description = 'Adds a new feature or component to your project.';
 
   AddCommand() {
+    addSubcommand(ShareAppCommand());
     addSubcommand(AddScreenCommand());
     addSubcommand(AddModelCommand());
     addSubcommand(AddRepositoryCommand());
@@ -30,15 +32,17 @@ class AddScreenCommand extends Command<void> {
         negatable: false,
         help: 'Creates the screen with a corresponding model and repository.');
   }
+}
+
+class ShareAppCommand extends Command<void> {
+  @override
+  final name = 'share';
+  @override
+  final description = 'Adds a share app functionality.';
 
   @override
   void run() {
-    if (argResults!.rest.isEmpty) {
-      throw UsageException('Screen name must be specified.', usage);
-    }
-    final name = argResults!.rest.first;
-    final withRepo = argResults!['with-repo'] as bool;
-    GetXGenerator().createFeature(name, withModel: withRepo, withRepo: withRepo);
+    UtilGenerator().addShareFeature();
   }
 }
 
