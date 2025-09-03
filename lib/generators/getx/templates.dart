@@ -104,30 +104,30 @@ dependencies:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
-  intl:
-  get: ^4.7.2
-  hive_flutter: ^2.0.0-dev
-  flutter_screenutil: ^5.9.3
-  cached_network_image: ^3.4.1
-  flutter_svg: ^2.2.0
-  fluttertoast: ^8.2.12
-  flutter_easyloading: ^3.0.5
-  connectivity_plus: ^6.1.5
-  dio: ^5.9.0
-  flutter_animate: ^4.5.2
-  rflutter_alert: ^2.0.7
-  h3m_shimmer_card: ^0.0.2
-  image_cropper: ^8.1.0
-  image_picker: ^1.2.0
-  logger: ^2.6.1
-  upgrader: ^11.5.0
+  ${PackageType.cupertinoIcons}
+  ${PackageType.intl}
+  ${PackageType.get}
+  ${PackageType.hiveFlutter}
+  ${PackageType.screenUtil}
+  ${PackageType.cachedNetworkImage}
+  ${PackageType.svg}
+  ${PackageType.toast}
+  ${PackageType.easyLoading}
+  ${PackageType.connectivityPlus}
+  ${PackageType.dio}
+  ${PackageType.animate}
+  ${PackageType.alert}
+  ${PackageType.shimmer}
+  ${PackageType.imageCropper}
+  ${PackageType.imagePicker}
+  ${PackageType.logger}
+  ${PackageType.upgrader}
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  flutter_lints: ^5.0.0
+  ${PackageType.lints}
 
 flutter:
   uses-material-design: true

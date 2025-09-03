@@ -8,12 +8,12 @@ class FirebaseGenerator {
 
   // A map of service keys to their pubspec dependencies.
   static final Map<String, String> _firebasePackages = {
-    FirebaseServiceType.core: 'firebase_core: ^4.0.0',
-    FirebaseServiceType.auth: 'firebase_auth: ^6.0.1',
-    FirebaseServiceType.firestore: 'cloud_firestore: ^6.0.0',
-    FirebaseServiceType.messaging: 'firebase_messaging: ^16.0.0', // For Notifications
-    FirebaseServiceType.analytics: 'firebase_analytics: ^12.0.0',
-    FirebaseServiceType.crashlytics: 'firebase_crashlytics: ^5.0.0',
+    FirebaseServiceType.core: PackageType.core,
+    FirebaseServiceType.auth: PackageType.auth,
+    FirebaseServiceType.firestore: PackageType.firestore,
+    FirebaseServiceType.messaging: PackageType.messaging, // For Notifications
+    FirebaseServiceType.analytics: PackageType.analytics,
+    FirebaseServiceType.crashlytics: PackageType.crashlytics,
   };
 
   void addServices(List<String> services) {
@@ -55,17 +55,15 @@ class FirebaseGenerator {
         .toList();
 
     if(services.contains(FirebaseServiceType.auth)){
-      dependenciesToAdd.add('google_sign_in: ^7.1.1');
-      dependenciesToAdd.add('sign_in_with_apple: ^7.0.1');
+      dependenciesToAdd.add(PackageType.googleSignIn);
+      dependenciesToAdd.add(PackageType.appleSignIn);
     }
     if(services.contains(FirebaseServiceType.messaging)){
-      dependenciesToAdd.add('flutter_local_notifications: ^19.4.1');
+      dependenciesToAdd.add(PackageType.localNotifications);
     }
     if(services.contains(FirebaseServiceType.ads)){
-      dependenciesToAdd.add('    url: https://github.com/Khuntarpit/flutter_native_ad.git');
-      dependenciesToAdd.add('  git:');
-      dependenciesToAdd.add('flutter_native_ad:');
-      dependenciesToAdd.add('firebase_remote_config: ^6.0.0');
+      dependenciesToAdd.add(PackageType.ads);
+      dependenciesToAdd.add(PackageType.remoteConfig);
     }
 
     // Check and add dependencies if they don't exist.

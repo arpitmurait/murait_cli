@@ -8,39 +8,43 @@ class FirebaseServiceType {
   static String ads = 'ads';
 }
 
+class PackageType {
+  static String core = 'firebase_core: ^4.0.0';
+  static String auth = 'firebase_auth: ^6.0.1';
+  static String firestore = 'cloud_firestore: ^6.0.0';
+  static String messaging = 'firebase_messaging: ^16.0.0';
+  static String analytics = 'firebase_analytics: ^12.0.0';
+  static String crashlytics = 'firebase_crashlytics: ^5.0.0';
+  static String ads = 'flutter_native_ad:\n  git:\n    url: https://github.com/Khuntarpit/flutter_native_ad.git';
+  static String googleSignIn = 'google_sign_in: ^7.1.1';
+  static String appleSignIn = 'sign_in_with_apple: ^7.0.1';
+  static String localNotifications = 'flutter_local_notifications: ^19.4.1';
+  static String remoteConfig = 'firebase_remote_config: ^6.0.0';
+
+  static String cupertinoIcons = 'cupertino_icons: ^1.0.8';
+  static String intl = 'intl:';
+  static String get = 'get: ^4.7.2';
+  static String hiveFlutter = 'hive_flutter: ^2.0.0-dev';
+  static String screenUtil = 'flutter_screenutil: ^5.9.3';
+  static String cachedNetworkImage = 'cached_network_image: ^3.4.1';
+  static String svg = 'flutter_svg: ^2.2.0';
+  static String toast = 'fluttertoast: ^8.2.12';
+  static String easyLoading = 'flutter_easyloading: ^3.0.5';
+  static String connectivityPlus = 'connectivity_plus: ^6.1.5';
+  static String dio = 'dio: ^5.9.0';
+  static String animate = 'flutter_animate: ^4.5.2';
+  static String alert = 'rflutter_alert: ^2.0.7';
+  static String shimmer = 'h3m_shimmer_card: ^0.0.2';
+  static String imageCropper = 'image_cropper: ^8.1.0';
+  static String imagePicker = 'image_picker: ^1.2.0';
+  static String logger = 'logger: ^2.6.1';
+  static String upgrader = 'upgrader: ^11.5.0';
+  static String lints = 'flutter_lints: ^5.0.0';
+}
+
 /// Capitalizes the first letter of a string.
 /// Example: "home" -> "Home"
 String capitalize(String text) {
   if (text.isEmpty) return text;
   return text[0].toUpperCase() + text.substring(1);
-}
-
-/// Converts a snake_case or kebab-case string to PascalCase.
-/// Example: "user_profile" -> "UserProfile"
-/// Example: "user-profile" -> "UserProfile"
-String toPascalCase(String text) {
-  return text
-      .split(RegExp(r'[_\-]'))
-      .map((word) => capitalize(word))
-      .join();
-}
-
-/// Converts a string to snake_case.
-/// Example: "UserProfile" -> "user_profile"
-String toSnakeCase(String text) {
-  final regex = RegExp(r'(?<=[a-z])[A-Z]');
-  return text.replaceAllMapped(regex, (match) => '_${match.group(0)}').toLowerCase();
-}
-
-/// Converts a string to kebab-case.
-/// Example: "UserProfile" -> "user-profile"
-String toKebabCase(String text) {
-  final regex = RegExp(r'(?<=[a-z])[A-Z]');
-  return text.replaceAllMapped(regex, (match) => '-${match.group(0)}').toLowerCase();
-}
-
-/// Ensures safe class name generation (removes invalid characters).
-String sanitizeClassName(String name) {
-  final cleaned = name.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '');
-  return capitalize(cleaned);
 }
