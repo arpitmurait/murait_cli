@@ -369,7 +369,7 @@ void registerAnalyticsEvent({required String name}) {
     if (compileOptionsIndex != -1) {
       final compileOptionsEndIndex = lines.indexWhere((line) => line.trim() == '}', compileOptionsIndex);
       if (compileOptionsEndIndex != -1 && !lines.any((line) => line.contains('coreLibraryDesugaringEnabled'))) {
-        lines.insert(compileOptionsEndIndex, '        coreLibraryDesugaringEnabled = true');
+        lines.insert(compileOptionsEndIndex, '        isCoreLibraryDesugaringEnabled = true');
         print('   -> Enabled coreLibraryDesugaring.');
         contentModified = true;
       }

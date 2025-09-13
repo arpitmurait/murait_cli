@@ -37,17 +37,26 @@ class NotificationService {
   /// This should be called once, preferably in `main.dart`.
   Future<void> initialize() async {
     // 1. Request Permissions
-    await _requestPermissions();
+    try{
+      await _requestPermissions();
+    } catch (e) {}
 
     // 2. Initialize Local Notifications
-    await _initializeLocalNotifications();
+    try{
+      await _initializeLocalNotifications();
+    } catch (e) {}
 
     // 3. Initialize Firebase Listeners
-    await _initializeFirebaseListeners();
+    try{
+      await _initializeFirebaseListeners();
+    } catch (e) {}
 
     // 4. Get FCM Token
-    final String? fcmToken = await _firebaseMessaging.getToken();
-    log("FCM Token: $fcmToken");
+    try{
+      FirebaseMessaging.instance.subscribeToTopic("all");
+      final String? fcmToken = await _firebaseMessaging.getToken();
+      log("FCM Token: $fcmToken");
+    } catch (e) {}
 
     // Optional: Set up background message handler
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
