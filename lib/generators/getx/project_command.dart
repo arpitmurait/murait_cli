@@ -32,6 +32,27 @@ class AddScreenCommand extends Command<void> {
         negatable: false,
         help: 'Creates the screen with a corresponding model and repository.');
   }
+
+  @override
+  void run() {
+    if (argResults!.rest.isEmpty) {
+      throw UsageException('Screen name must be specified.', usage);
+    }
+
+    final screenName = argResults!.rest.first;
+    final withRepo = argResults!['with-repo'] as bool;
+
+    GetXGenerator().createFeature(
+      screenName,
+      withModel: true,
+      withRepo: withRepo,
+    );
+
+    print('✅ Created screen "$screenName" successfully.');
+    if (withRepo) {
+      print('   → Repository and model also created.');
+    }
+  }
 }
 
 class ShareAppCommand extends Command<void> {
