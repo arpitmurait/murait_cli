@@ -15,6 +15,9 @@ You can install murait_cli directly from GitHub. Just make sure you have the Dar
 
 ```bash
 dart pub global activate -sgit https://github.com/arpitmurait/murait_cli.git
+
+dart /Users/horizonpro/Documents/murait/plugins/murait_cli/bin/murait_cli.dart create app
+
 ```
 
 After installation, you can use the `murait_cli` command from anywhere on your system.
