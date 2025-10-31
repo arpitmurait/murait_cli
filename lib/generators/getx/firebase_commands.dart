@@ -1,7 +1,6 @@
 import 'package:args/command_runner.dart';
 import '../utils.dart';
-import 'firebase_generator.dart';
-import 'project_creator.dart';
+import 'firebase/firebase_generator.dart';
 
 class FirebaseCommand extends Command<void> {
   @override
@@ -20,89 +19,86 @@ class FirebaseCommand extends Command<void> {
   }
 }
 
+/// Base class for Firebase service commands
+abstract class BaseFirebaseCommand extends Command<void> {
+  final List<String> services;
+
+  BaseFirebaseCommand(this.services);
+
+  @override
+  void run() async {
+    await FirebaseGenerator().addServices(services);
+  }
+}
+
 // --- Subcommands for "firebase" ---
 
-class FirebaseCoreCommand extends Command<void> {
-  @override
-  final name = FirebaseServiceType.core;
-  @override
-  final description = 'Adds core Firebase service.';
+class FirebaseCoreCommand extends BaseFirebaseCommand {
+  FirebaseCoreCommand() : super([FirebaseServiceType.core]);
 
   @override
-  void run() {
-    FirebaseGenerator().addServices([FirebaseServiceType.core]);
-  }
+  String get name => FirebaseServiceType.core;
+  @override
+  String get description => 'Adds core Firebase service.';
 }
 
-class FirebaseAllCommand extends Command<void> {
-  @override
-  final name = 'all';
-  @override
-  final description = 'Adds core Firebase services (Auth, Firestore, analytics, notification , crashlytics).';
+class FirebaseAllCommand extends BaseFirebaseCommand {
+  FirebaseAllCommand() : super([
+    FirebaseServiceType.core,
+    FirebaseServiceType.auth,
+    FirebaseServiceType.analytics,
+    FirebaseServiceType.messaging,
+    FirebaseServiceType.crashlytics,
+  ]);
 
   @override
-  void run() {
-    FirebaseGenerator().addServices([FirebaseServiceType.core,FirebaseServiceType.auth, FirebaseServiceType.analytics, FirebaseServiceType.messaging, FirebaseServiceType.crashlytics]);
-  }
+  String get name => 'all';
+  @override
+  String get description => 'Adds core Firebase services (Auth, Firestore, analytics, notification, crashlytics).';
 }
 
-class FirebaseAuthCommand extends Command<void> {
-  @override
-  final name = FirebaseServiceType.auth;
-  @override
-  final description = 'Adds Firebase Authentication.';
+class FirebaseAuthCommand extends BaseFirebaseCommand {
+  FirebaseAuthCommand() : super([FirebaseServiceType.auth]);
 
   @override
-  void run() {
-    FirebaseGenerator().addServices([FirebaseServiceType.auth]);
-  }
+  String get name => FirebaseServiceType.auth;
+  @override
+  String get description => 'Adds Firebase Authentication.';
 }
 
-class FirebaseNotificationsCommand extends Command<void> {
-  @override
-  final name = FirebaseServiceType.messaging;
-  @override
-  final description = 'Adds Firebase Cloud Messaging for notifications.';
+class FirebaseNotificationsCommand extends BaseFirebaseCommand {
+  FirebaseNotificationsCommand() : super([FirebaseServiceType.messaging]);
 
   @override
-  void run() {
-    FirebaseGenerator().addServices([FirebaseServiceType.messaging]);
-  }
+  String get name => FirebaseServiceType.messaging;
+  @override
+  String get description => 'Adds Firebase Cloud Messaging for notifications.';
 }
 
-class FirebaseAnalyticsCommand extends Command<void> {
-  @override
-  final name = FirebaseServiceType.analytics;
-  @override
-  final description = 'Adds Firebase Analytics.';
+class FirebaseAnalyticsCommand extends BaseFirebaseCommand {
+  FirebaseAnalyticsCommand() : super([FirebaseServiceType.analytics]);
 
   @override
-  void run() {
-    FirebaseGenerator().addServices([FirebaseServiceType.analytics]);
-  }
+  String get name => FirebaseServiceType.analytics;
+  @override
+  String get description => 'Adds Firebase Analytics.';
 }
 
-class FirebaseCrashlyticsCommand extends Command<void> {
-  @override
-  final name = FirebaseServiceType.crashlytics;
-  @override
-  final description = 'Adds Firebase Crashlytics.';
+class FirebaseCrashlyticsCommand extends BaseFirebaseCommand {
+  FirebaseCrashlyticsCommand() : super([FirebaseServiceType.crashlytics]);
 
   @override
-  void run() {
-    FirebaseGenerator().addServices([FirebaseServiceType.crashlytics]);
-  }
+  String get name => FirebaseServiceType.crashlytics;
+  @override
+  String get description => 'Adds Firebase Crashlytics.';
 }
 
-class FirebaseAdsCommand extends Command<void> {
-  @override
-  final name = FirebaseServiceType.ads;
-  @override
-  final description = 'Adds Firebase Ads.';
+class FirebaseAdsCommand extends BaseFirebaseCommand {
+  FirebaseAdsCommand() : super([FirebaseServiceType.ads]);
 
   @override
-  void run() {
-    FirebaseGenerator().addServices([FirebaseServiceType.ads]);
-  }
+  String get name => FirebaseServiceType.ads;
+  @override
+  String get description => 'Adds Firebase Ads.';
 }
 

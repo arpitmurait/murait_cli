@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'dart:isolate';
-import 'package:murait_cli/generators/getx/templates.dart';
+import 'package:murait_cli/generators/getx/core/project_templates.dart';
 import 'package:path/path.dart' as p;
 import 'package:process/process.dart';
 
@@ -188,7 +188,7 @@ class ProjectGenerator {
       print('⚠️  Warning: Template assets directory not found at "$templateAssetsPath". Skipping assets copy.');
     }
     print('✅ Boilerplate lib folder copied.');
-    await Templates.createPubspecFile(projectName);
+    await ProjectTemplates.createPubspecFile(projectName);
 
     print('\n🎉 Success! Project "$projectName" is ready.');
     print('Next steps:');

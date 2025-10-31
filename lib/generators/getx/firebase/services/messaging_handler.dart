@@ -1,0 +1,190 @@
+import 'dart:io';
+import 'package:path/path.dart' as p;
+import 'firebase_service_handler.dart';
+
+/// Handles Firebase Messaging/Notifications setup
+class MessagingHandler implements FirebaseServiceHandler {
+  @override
+  String get serviceType => 'messaging';
+
+  @override
+  Future<void> setup() async {
+    await _copyNotificationService();
+    await _updateAndroidManifest();
+    await _updateBuildGradle();
+    await _updateBuildGradleKts();
+  }
+
+  @override
+  Future<bool> isConfigured() async {
+    final notificationService = File('lib/core/utils/notification_service.dart');
+    return await notificationService.exists();
+  }
+
+  Future<void> _copyNotificationService() async {
+    final scriptUri = Platform.script;
+    final scriptPath = scriptUri.toFilePath(windows: Platform.isWindows);
+    final templatePath = p.normalize(
+      p.join(
+        p.dirname(p.dirname(p.dirname(p.dirname(scriptPath)))),
+        'lib',
+        'templates',
+        'core',
+        'notification_service.dart',
+      ),
+    );
+    
+    final templateFile = File(templatePath);
+    if (!await templateFile.exists()) {
+      print('⚠️ Warning: notification_service.dart template not found.');
+      return;
+    }
+
+    final targetDir = Directory('lib/core/utils');
+    if (!await targetDir.exists()) {
+      await targetDir.create(recursive: true);
+    }
+    
+    final targetFile = File('lib/core/utils/notification_service.dart');
+    if (!await targetFile.exists()) {
+      await targetFile.writeAsString(await templateFile.readAsString());
+      print('   -> Created lib/core/utils/notification_service.dart');
+    }
+  }
+
+  Future<void> _updateAndroidManifest() async {
+    final manifestFile = File('android/app/src/main/AndroidManifest.xml');
+    if (!await manifestFile.exists()) {
+      print('⚠️ Warning: AndroidManifest.xml not found. Could not add notification meta-data.');
+      return;
+    }
+    print('   -> Updating AndroidManifest.xml for push notifications...');
+
+    var lines = await manifestFile.readAsLines();
+
+    const channelIdMetaData = '        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="primary_channel" />';
+    const iconMetaData = '        <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@mipmap/ic_launcher" />';
+
+    if (lines.any((line) => line.contains('com.google.firebase.messaging.default_notification_channel_id'))) {
+      print('   -> Notification meta-data already exists in AndroidManifest.xml.');
+      return;
+    }
+
+    final activityEndIndex = lines.lastIndexWhere((line) => line.trim().startsWith('</activity>'));
+    if (activityEndIndex != -1) {
+      lines.insert(activityEndIndex, iconMetaData);
+      lines.insert(activityEndIndex, channelIdMetaData);
+      await manifestFile.writeAsString(lines.join('\n'));
+      print('   -> Added notification meta-data to AndroidManifest.xml.');
+    } else {
+      print('⚠️ Warning: Could not find a suitable location in AndroidManifest.xml to add meta-data.');
+    }
+  }
+
+  Future<void> _updateBuildGradle() async {
+    final buildGradleFile = File('android/app/build.gradle');
+    if (!await buildGradleFile.exists()) {
+      print('⚠️ Warning: android/app/build.gradle not found.');
+      return;
+    }
+    print('   -> Updating android/app/build.gradle for Firebase compatibility...');
+
+    var lines = await buildGradleFile.readAsLines();
+    var contentModified = false;
+
+    // Update minSdkVersion and add multiDexEnabled
+    final defaultConfigIndex = lines.indexWhere((line) => line.trim().startsWith('defaultConfig'));
+    if (defaultConfigIndex != -1) {
+      final defaultConfigEndIndex = lines.indexWhere((line) => line.trim() == '}', defaultConfigIndex);
+      if (defaultConfigEndIndex != -1) {
+        for (int i = defaultConfigIndex; i < defaultConfigEndIndex; i++) {
+          if (lines[i].trim().startsWith('minSdkVersion') && !lines[i].contains('23')) {
+            lines[i] = '        minSdkVersion 23';
+            contentModified = true;
+          }
+        }
+        if (!lines.any((line) => line.contains('multiDexEnabled'))) {
+          lines.insert(defaultConfigEndIndex, '        multiDexEnabled true');
+          contentModified = true;
+        }
+      }
+    }
+
+    // Add coreLibraryDesugaringEnabled
+    final compileOptionsIndex = lines.indexWhere((line) => line.trim().startsWith('compileOptions'));
+    if (compileOptionsIndex != -1) {
+      final compileOptionsEndIndex = lines.indexWhere((line) => line.trim() == '}', compileOptionsIndex);
+      if (compileOptionsEndIndex != -1 && !lines.any((line) => line.contains('coreLibraryDesugaringEnabled'))) {
+        lines.insert(compileOptionsEndIndex, '        coreLibraryDesugaringEnabled true');
+        contentModified = true;
+      }
+    }
+
+    // Add desugaring dependency
+    final dependenciesIndex = lines.indexWhere((line) => line.trim().startsWith('dependencies'));
+    if (dependenciesIndex != -1) {
+      if (!lines.any((line) => line.contains('desugar_jdk_libs'))) {
+        lines.insert(dependenciesIndex + 1, "    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'");
+        contentModified = true;
+      }
+    }
+
+    if (contentModified) {
+      await buildGradleFile.writeAsString(lines.join('\n'));
+      print('   -> Updated build.gradle successfully.');
+    }
+  }
+
+  Future<void> _updateBuildGradleKts() async {
+    final buildGradleKtsFile = File('android/app/build.gradle.kts');
+    if (!await buildGradleKtsFile.exists()) {
+      return; // KTS file is optional
+    }
+    print('   -> Updating android/app/build.gradle.kts...');
+
+    var lines = await buildGradleKtsFile.readAsLines();
+    var contentModified = false;
+
+    final defaultConfigIndex = lines.indexWhere((line) => line.contains('defaultConfig'));
+    if (defaultConfigIndex != -1) {
+      final defaultConfigEndIndex = lines.indexWhere((line) => line.trim() == '}', defaultConfigIndex);
+      if (defaultConfigEndIndex != -1) {
+        for (int i = defaultConfigIndex; i < defaultConfigEndIndex; i++) {
+          if (lines[i].trim().startsWith('minSdk') && !lines[i].contains('23')) {
+            lines[i] = lines[i].replaceAll(RegExp(r'minSdk\s*=?\s*\d+'), 'minSdk = 23');
+            contentModified = true;
+          }
+        }
+        if (!lines.any((line) => line.contains('multiDexEnabled'))) {
+          lines.insert(defaultConfigEndIndex, '        multiDexEnabled = true');
+          contentModified = true;
+        }
+      }
+    }
+
+    // Add coreLibraryDesugaringEnabled
+    final compileOptionsIndex = lines.indexWhere((line) => line.trim().startsWith('compileOptions'));
+    if (compileOptionsIndex != -1) {
+      final compileOptionsEndIndex = lines.indexWhere((line) => line.trim() == '}', compileOptionsIndex);
+      if (compileOptionsEndIndex != -1 && !lines.any((line) => line.contains('coreLibraryDesugaringEnabled'))) {
+        lines.insert(compileOptionsEndIndex, '        isCoreLibraryDesugaringEnabled = true');
+        contentModified = true;
+      }
+    }
+
+    // Add desugaring dependency
+    final dependenciesIndex = lines.indexWhere((line) => line.trim().startsWith('dependencies'));
+    if (dependenciesIndex != -1) {
+      if (!lines.any((line) => line.contains('desugar_jdk_libs'))) {
+        lines.insert(dependenciesIndex + 1, '    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")');
+        contentModified = true;
+      }
+    }
+
+    if (contentModified) {
+      await buildGradleKtsFile.writeAsString(lines.join('\n'));
+      print('   -> Updated build.gradle.kts successfully.');
+    }
+  }
+}
+

@@ -35,7 +35,7 @@ class AddScreenCommand extends Command<void> {
   }
 
   @override
-  void run() {
+  void run() async {
     if (argResults!.rest.isEmpty) {
       throw UsageException('Screen name must be specified.', usage);
     }
@@ -43,7 +43,7 @@ class AddScreenCommand extends Command<void> {
     final screenName = argResults!.rest.first;
     final withRepo = argResults!['with-repo'] as bool;
 
-    GetXGenerator().createFeature(
+    await GetXGenerator().createFeature(
       screenName,
       withModel: true,
       withRepo: withRepo,
@@ -75,13 +75,12 @@ class AddModelCommand extends Command<void> {
   final description = 'Adds a new model file.';
 
   @override
-  void run() {
+  void run() async {
     if (argResults!.rest.isEmpty) {
       throw UsageException('Model name must be specified.', usage);
     }
     final name = argResults!.rest.first;
-    GetXGenerator().createFeature(name, withModel: true, withRepo: false);
-    print('✅ Created lib/data/model/${name}_model.dart');
+    await GetXGenerator().createModel(name);
   }
 }
 
@@ -92,13 +91,12 @@ class AddRepositoryCommand extends Command<void> {
   final description = 'Adds a new repository file.';
 
   @override
-  void run() {
+  void run() async {
     if (argResults!.rest.isEmpty) {
       throw UsageException('Repository name must be specified.', usage);
     }
     final name = argResults!.rest.first;
-    GetXGenerator().createFeature(name, withModel: false, withRepo: true);
-    print('✅ Created lib/data/repository/${name}_repository.dart');
+    await GetXGenerator().createRepository(name);
   }
 }
 
