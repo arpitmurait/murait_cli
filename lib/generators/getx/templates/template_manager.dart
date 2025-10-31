@@ -1,5 +1,4 @@
 import '../../utils.dart' show toPascalCase;
-import '../core/path_config.dart';
 
 /// Interface for template providers
 abstract class GetXTemplateProvider {
@@ -14,8 +13,12 @@ class DefaultGetXTemplateProvider implements GetXTemplateProvider {
   @override
   String controllerTemplate(String name, {bool withRepo = false}) {
     final className = toPascalCase(name);
+    // Calculate relative path from controller to repository
+    // Controller: lib/screens/{name}/{name}_controller.dart
+    // Repository: lib/data/repository/{name}_repository.dart
+    // Relative: ../../data/repository/${name}_repository.dart
     final repoImport = withRepo 
-        ? "import '${GetXPathConfig.getRepositoryPath(name).replaceAll('lib/', '../')}';"
+        ? "import '../../data/repository/${name}_repository.dart';"
         : '';
     final repoField = withRepo 
         ? '  final ${className}Repository _repository = Get.find(tag: (${className}Repository).toString());\n'
@@ -120,7 +123,11 @@ class ${className}Model {
   @override
   String repoTemplate(String name) {
     final className = toPascalCase(name);
-    final modelImport = GetXPathConfig.getModelPath(name).replaceAll('lib/', '../');
+    // Calculate relative path from repository to model
+    // Repository: lib/data/repository/{name}_repository.dart
+    // Model: lib/data/model/{name}_model.dart
+    // Relative: ../model/${name}_model.dart
+    final modelImport = '../model/${name}_model.dart';
     
     return '''
 import '$modelImport';
