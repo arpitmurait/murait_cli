@@ -70,7 +70,21 @@ class FirebasePubspecManager {
         return trimmed.startsWith(actualPackageName) || 
                trimmed.startsWith(packageName.split(' ').first);
       })) {
-        lines.insert(dependenciesIndex + 1, '  $dep');
+        // Handle multiline dependencies (like git dependencies)
+        if (dep.contains('\n')) {
+          // Format multiline dependency with proper indentation
+          final depLines = dep.split('\n');
+          final formattedDep = depLines.asMap().entries.map((entry) {
+            if (entry.key == 0) {
+              return '  ${entry.value}'; // First line: package name with 2 spaces
+            } else {
+              return '    ${entry.value}'; // Subsequent lines: with 4 spaces
+            }
+          }).join('\n');
+          lines.insert(dependenciesIndex + 1, formattedDep);
+        } else {
+          lines.insert(dependenciesIndex + 1, '  $dep');
+        }
         addedCount++;
       }
     }
