@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:isolate';
 import 'package:path/path.dart' as p;
 import 'firebase_service_handler.dart';
 
@@ -22,23 +23,88 @@ class MessagingHandler implements FirebaseServiceHandler {
   }
 
   Future<void> _copyNotificationService() async {
-    final scriptUri = Platform.script;
-    final scriptPath = scriptUri.toFilePath(windows: Platform.isWindows);
-    final templatePath = p.normalize(
-      p.join(
-        p.dirname(p.dirname(p.dirname(p.dirname(scriptPath)))),
-        'lib',
-        'templates',
-        'core',
-        'notification_service.dart',
-      ),
-    );
+    // Find the package root using Isolate.resolvePackageUri (more reliable)
+    String? templatePath;
     
-    final templateFile = File(templatePath);
-    if (!await templateFile.exists()) {
-      print('⚠️ Warning: notification_service.dart template not found.');
+    try {
+      final packageUri = await Isolate.resolvePackageUri(
+        Uri.parse('package:murait_cli/generators/getx/firebase/services/messaging_handler.dart')
+      );
+      if (packageUri != null && packageUri.scheme == 'file') {
+        var packagePath = packageUri.toFilePath(windows: Platform.isWindows);
+        var servicesDir = p.dirname(packagePath); // firebase/services
+        var firebaseDir = p.dirname(servicesDir); // firebase
+        var getxDir = p.dirname(firebaseDir); // getx
+        var generatorsDir = p.dirname(getxDir); // generators
+        var libDir = p.dirname(generatorsDir); // lib
+        var rootDir = p.dirname(libDir); // package root
+        
+        templatePath = p.join(rootDir, 'lib', 'templates', 'core', 'notification_service.dart');
+      }
+    } catch (e) {
+      // Fallback to script path method
+    }
+
+    // Fallback: Try using Platform.script if templatePath is null
+    templatePath ??= () {
+      final scriptUri = Platform.script;
+      final scriptPath = scriptUri.toFilePath(windows: Platform.isWindows);
+      return p.normalize(
+        p.join(
+          p.dirname(p.dirname(p.dirname(p.dirname(scriptPath)))),
+          'lib',
+          'templates',
+          'core',
+          'notification_service.dart',
+        ),
+      );
+    }();
+
+    // Check if template exists (templatePath is guaranteed to be non-null at this point)
+    bool templateExists = await File(templatePath).exists();
+    if (!templateExists) {
+      final homeDir = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '';
+      if (homeDir.isNotEmpty) {
+        final pubCachePath = Platform.isWindows
+            ? p.join(homeDir, 'AppData', 'Local', 'Pub', 'Cache')
+            : p.join(homeDir, '.pub-cache');
+        
+        final globalPackagesPath = p.join(pubCachePath, 'global_packages', 'murait_cli');
+        if (await Directory(globalPackagesPath).exists()) {
+          final testPath = p.join(globalPackagesPath, 'lib', 'templates', 'core', 'notification_service.dart');
+          if (await File(testPath).exists()) {
+            templatePath = testPath;
+            templateExists = true;
+          }
+        }
+        
+        if (!templateExists) {
+          // Try git cache
+          final gitCachePath = p.join(pubCachePath, 'git', 'cache');
+          if (await Directory(gitCachePath).exists()) {
+            await for (var entity in Directory(gitCachePath).list()) {
+              if (entity is Directory) {
+                final testPath = p.join(entity.path, 'lib', 'templates', 'core', 'notification_service.dart');
+                if (await File(testPath).exists()) {
+                  templatePath = testPath;
+                  templateExists = true;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    if (!templateExists || templatePath == null) {
+      // If template not found, create a minimal version
+      print('⚠️ Warning: notification_service.dart template not found. Creating minimal version.');
+      await _createMinimalNotificationService();
       return;
     }
+    
+    final templateFile = File(templatePath);
 
     final targetDir = Directory('lib/core/utils');
     if (!await targetDir.exists()) {
@@ -46,10 +112,58 @@ class MessagingHandler implements FirebaseServiceHandler {
     }
     
     final targetFile = File('lib/core/utils/notification_service.dart');
-    if (!await targetFile.exists()) {
-      await targetFile.writeAsString(await templateFile.readAsString());
-      print('   -> Created lib/core/utils/notification_service.dart');
+    await targetFile.writeAsString(await templateFile.readAsString());
+    print('   -> Created lib/core/utils/notification_service.dart');
+  }
+
+  Future<void> _createMinimalNotificationService() async {
+    final targetDir = Directory('lib/core/utils');
+    if (!await targetDir.exists()) {
+      await targetDir.create(recursive: true);
     }
+    
+    final minimalService = '''
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Background message handler
+}
+
+class NotificationService {
+  NotificationService._internal();
+  static final NotificationService _instance = NotificationService._internal();
+  factory NotificationService() => _instance;
+
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  final FlutterLocalNotificationsPlugin _localNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+  Future<void> initialize() async {
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    // Initialize local notifications
+    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const iosSettings = DarwinInitializationSettings();
+    const initSettings = InitializationSettings(
+      android: androidSettings,
+      iOS: iosSettings,
+    );
+    await _localNotificationsPlugin.initialize(initSettings);
+    
+    // Request permissions
+    await _firebaseMessaging.requestPermission();
+    await _firebaseMessaging.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+  }
+}
+''';
+    
+    final targetFile = File('lib/core/utils/notification_service.dart');
+    await targetFile.writeAsString(minimalService);
+    print('   -> Created minimal lib/core/utils/notification_service.dart');
   }
 
   Future<void> _updateAndroidManifest() async {

@@ -36,10 +36,7 @@ class FirebaseGenerator {
     // 1. Update pubspec.yaml
     await _pubspecManager.updatePubspec(validServices);
 
-    // 2. Update main.dart
-    await _mainUpdater.updateMain(validServices);
-
-    // 3. Setup service-specific handlers
+    // 2. Setup service-specific handlers first (creates files before main.dart imports them)
     final handlers = _serviceRegistry.getHandlersForServices(validServices);
     for (final handler in handlers) {
       try {
@@ -48,6 +45,9 @@ class FirebaseGenerator {
         print('⚠️ Warning: Failed to setup ${handler.serviceType}: $e');
       }
     }
+
+    // 3. Update main.dart (after handlers have created required files)
+    await _mainUpdater.updateMain(validServices);
 
     // 4. Show completion message
     _printCompletionMessage();
