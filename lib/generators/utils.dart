@@ -15,7 +15,7 @@ class PackageType {
   static String messaging = 'firebase_messaging: ^16.0.3';
   static String analytics = 'firebase_analytics: ^12.0.3';
   static String crashlytics = 'firebase_crashlytics: ^5.0.3';
-  static String ads = 'flutter_native_ad:\n  git:\n    url: https://github.com/Khuntarpit/flutter_native_ad.git';
+  static String ads = '  flutter_native_ad:\n    git:\n      url: https://github.com/Khuntarpit/flutter_native_ad.git';
   static String googleSignIn = 'google_sign_in: ^7.2.0';
   static String appleSignIn = 'sign_in_with_apple: ^7.0.1';
   static String localNotifications = 'flutter_local_notifications: ^19.5.0';
