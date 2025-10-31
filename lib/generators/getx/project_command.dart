@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:args/command_runner.dart';
 
 import 'getx_generator.dart';
@@ -108,11 +109,12 @@ class CreateCommand extends Command<void> {
   final description = 'Creates a new Flutter project from the Murait boilerplate.';
 
   @override
-  void run() {
+  void run() async {
     if (argResults!.rest.isEmpty) {
       throw UsageException('Project name must be specified.', usage);
     }
     final projectName = argResults!.rest.first;
-    ProjectGenerator().createProject(projectName);
+    await ProjectGenerator().createProject(projectName);
+    exit(0);
   }
 }

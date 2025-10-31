@@ -15,12 +15,49 @@ You can install murait_cli directly from GitHub. Just make sure you have the Dar
 
 ```bash
 dart pub global activate -sgit https://github.com/arpitmurait/murait_cli.git
-
-dart /Users/horizonpro/Documents/murait/plugins/murait_cli/bin/murait_cli.dart create app
-
 ```
 
-After installation, you can use the `murait_cli` command from anywhere on your system.
+**Important:** Make sure your `$HOME/.pub-cache/bin` is in your PATH. If it's not, add it:
+- **macOS/Linux:** Add `export PATH="$PATH:$HOME/.pub-cache/bin"` to your `~/.bashrc` or `~/.zshrc`, then run `source ~/.bashrc` (or `source ~/.zshrc`)
+- **Windows:** Add `%LOCALAPPDATA%\Pub\Cache\bin` to your PATH environment variable
+
+After installation, you can use the `murait_cli` command from anywhere on your system:
+
+```bash
+murait_cli create <project_name>
+```
+
+### Troubleshooting
+
+If the `murait_cli` command is not found after activation:
+
+1. **Verify the installation:**
+   ```bash
+   dart pub global list
+   ```
+   You should see `murait_cli` in the list.
+
+2. **Check if the executable exists:**
+   ```bash
+   ls $HOME/.pub-cache/bin/murait_cli
+   ```
+   (On Windows: `dir %LOCALAPPDATA%\Pub\Cache\bin\murait_cli.bat`)
+
+3. **Verify your PATH:**
+   ```bash
+   echo $PATH | grep pub-cache
+   ```
+   (On Windows: `echo %PATH% | findstr Pub\Cache`)
+
+4. **If PATH is missing, add it and reload your shell:**
+   - Close and reopen your terminal
+   - Or run `source ~/.bashrc` / `source ~/.zshrc` on macOS/Linux
+
+5. **Try reactivating:**
+   ```bash
+   dart pub global deactivate murait_cli
+   dart pub global activate -sgit https://github.com/arpitmurait/murait_cli.git
+   ```
 
 ## ✨ Features & Commands
 

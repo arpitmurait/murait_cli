@@ -13,21 +13,56 @@ class ProjectGenerator {
   Future<String?> _findPackageRoot() async {
     if (_packageRoot != null) return _packageRoot;
 
-    // Get the path of the running script.
+    // Try to find the package using Platform.resolvedExecutable or Platform.script
     var scriptUri = Platform.script;
     var scriptPath = scriptUri.toFilePath(windows: Platform.isWindows);
-
+    
+    // Get the home directory for pub-cache lookup
+    final homeDir = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '';
+    final pubCachePath = Platform.isWindows 
+        ? p.join(homeDir, 'AppData', 'Local', 'Pub', 'Cache')
+        : p.join(homeDir, '.pub-cache');
+    
+    // First, try the global_packages location (for globally activated packages)
+    final globalPackagesPath = p.join(pubCachePath, 'global_packages', 'murait_cli');
+    final globalPackagesDir = Directory(globalPackagesPath);
+    if (await globalPackagesDir.exists()) {
+      final pubspecFile = File(p.join(globalPackagesDir.path, 'pubspec.yaml'));
+      if (await pubspecFile.exists()) {
+        final content = await pubspecFile.readAsString();
+        if (content.contains('name: murait_cli')) {
+          _packageRoot = globalPackagesDir.path;
+          return _packageRoot;
+        }
+      }
+    }
+    
+    // Fallback: traverse up from script location (for local development)
     var currentDir = Directory(p.dirname(scriptPath));
-
-    // Traverse up the directory tree from the script's location
-    // until a pubspec.yaml file is found. This is the package root.
-    while (await currentDir.parent.exists()) {
+    var lastPath = '';
+    int maxIterations = 20; // Prevent infinite loops
+    int iterations = 0;
+    
+    while (iterations < maxIterations) {
+      if (currentDir.path == lastPath) break; // Reached root
+      lastPath = currentDir.path;
+      
       final pubspecFile = File(p.join(currentDir.path, 'pubspec.yaml'));
       if (await pubspecFile.exists()) {
-        _packageRoot = currentDir.path;
-        return _packageRoot;
+        try {
+          final content = await pubspecFile.readAsString();
+          if (content.contains('name: murait_cli')) {
+            _packageRoot = currentDir.path;
+            return _packageRoot;
+          }
+        } catch (e) {
+          // Continue searching if file read fails
+        }
       }
+      
+      if (!await currentDir.parent.exists()) break;
       currentDir = currentDir.parent;
+      iterations++;
     }
 
     return null;
@@ -58,11 +93,6 @@ class ProjectGenerator {
       return;
     }
 
-    final templateAssetsDir = Directory(templateAssetsPath);
-    if (!await templateAssetsDir.exists()) {
-      print('⚠️  Warning: Template assets directory not found at "$templateAssetsPath". An empty assets folder will be created.');
-    }
-
     print('🚀 Creating a new Flutter project "$projectName"... (This might take a moment)');
     const processManager = LocalProcessManager();
     var result = await processManager.run(['flutter', 'create', projectName]);
@@ -88,17 +118,16 @@ class ProjectGenerator {
     await newLibDir.create();
     await _copyDirectory(templateLibDir, newLibDir);
 
-    if (!await templateAssetsDir.exists() || templateAssetsDir.listSync().isEmpty) {
-      print('❌ Error: Template directory not found or is empty at "$templateAssetsPath".');
-      print('➡️ Please create it and place your boilerplate "lib" folder contents inside.');
-      return;
-    }
-
     // Copy your custom boilerplate assets folder.
-    print('✨ Copying boilerplate from "$templateAssetsPath"...');
-    final newAssetsDir = Directory('$projectName/assets');
-    await newAssetsDir.create();
-    await _copyDirectory(templateAssetsDir, newAssetsDir);
+    final templateAssetsDir = Directory(templateAssetsPath);
+    if (await templateAssetsDir.exists() && templateAssetsDir.listSync().isNotEmpty) {
+      print('✨ Copying boilerplate assets from "$templateAssetsPath"...');
+      final newAssetsDir = Directory('$projectName/assets');
+      await newAssetsDir.create();
+      await _copyDirectory(templateAssetsDir, newAssetsDir);
+    } else {
+      print('⚠️  Warning: Template assets directory not found at "$templateAssetsPath". Skipping assets copy.');
+    }
     print('✅ Boilerplate lib folder copied.');
     await Templates.createPubspecFile(projectName);
 
