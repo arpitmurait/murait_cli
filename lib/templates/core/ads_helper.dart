@@ -25,7 +25,6 @@ class AdsHelper {
   ValueNotifier bannerAdNotifier = ValueNotifier(null);
 
   loadBannerAd()async{
-    printLog("loadBannerAd ${AdConfig.bannerAdId}");
     bannerAdNotifier.value = null;
     var ad = FlutterBannerAd();
     await ad.loadBannerAd(
@@ -89,7 +88,6 @@ class AdsHelper {
   }
 
   static loadInterstitialAd({bool ignoreCount = false}) async{
-    printLog("loadInterstitialAd ${AdConfig.interstitialAdId}");
     interstitialAd = FlutterInterstitialAd();
     await interstitialAd.loadInterstitialAd(adUnitId:AdConfig.interstitialAdId,onAdLoaded: (ad) {
       interstitialAd.interstitialAd = ad;
@@ -104,7 +102,6 @@ class AdsHelper {
   ValueNotifier<bool> isNativeMediumLoadedNotifier = ValueNotifier<bool>(false);
 
   loadMediumNativeAd()async{
-    printLog("loadMediumNativeAd ${AdConfig.nativeAdId}");
     nativeMediumAdNotifier.value = null;
     isNativeMediumLoadedNotifier.value = false;
     var ad = FlutterNativeAd();
