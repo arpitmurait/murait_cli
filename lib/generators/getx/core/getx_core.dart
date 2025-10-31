@@ -1,4 +1,3 @@
-/// Core GetX generator module exports
 export 'file_manager.dart';
 export 'route_manager.dart';
 export 'path_config.dart';

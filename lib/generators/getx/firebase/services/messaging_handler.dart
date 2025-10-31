@@ -112,8 +112,9 @@ class MessagingHandler implements FirebaseServiceHandler {
     }
     
     final targetFile = File('lib/core/utils/notification_service.dart');
+    final exists = await targetFile.exists();
     await targetFile.writeAsString(await templateFile.readAsString());
-    print('   -> Created lib/core/utils/notification_service.dart');
+    print('   -> ${exists ? 'Updated' : 'Created'} lib/core/utils/notification_service.dart');
   }
 
   Future<void> _createMinimalNotificationService() async {
