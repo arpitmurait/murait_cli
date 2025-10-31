@@ -31,7 +31,11 @@ class AddScreenCommand extends Command<void> {
     argParser.addFlag('with-repo',
         abbr: 'r',
         negatable: false,
-        help: 'Creates the screen with a corresponding model and repository.');
+        help: 'Creates the screen with a corresponding repository.');
+    argParser.addFlag('with-model',
+        abbr: 'm',
+        negatable: false,
+        help: 'Creates the screen with a corresponding model.');
   }
 
   @override
@@ -42,16 +46,20 @@ class AddScreenCommand extends Command<void> {
 
     final screenName = argResults!.rest.first;
     final withRepo = argResults!['with-repo'] as bool;
+    final withModel = argResults!['with-model'] as bool;
 
     await GetXGenerator().createFeature(
       screenName,
-      withModel: true,
+      withModel: withModel,
       withRepo: withRepo,
     );
 
     print('✅ Created screen "$screenName" successfully.');
-    if (withRepo) {
-      print('   → Repository and model also created.');
+    if (withModel || withRepo) {
+      final parts = <String>[];
+      if (withModel) parts.add('model');
+      if (withRepo) parts.add('repository');
+      print('   → ${parts.join(' and ')} also created.');
     }
   }
 }
