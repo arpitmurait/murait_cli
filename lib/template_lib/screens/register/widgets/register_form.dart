@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../../../core/core.dart';
 import '../register_controller.dart';
@@ -16,8 +17,12 @@ class RegisterFormWidget extends StatelessWidget {
       child: Column(
         children: [
           CustomTextField(
-            hint: AppStrings.fullName.tr,
-            trailingSvg: AppImages.icLoginUser,
+            hintText: AppStrings.fullName.tr,
+            prefixIcon: SvgPicture.asset(
+              AppImages.icLoginUser,
+              width: 20,
+              height: 20,
+            ),
             controller: controller.nameController,
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -28,9 +33,13 @@ class RegisterFormWidget extends StatelessWidget {
           ),
           SizedBox(height: 12.h),
           CustomTextField(
-            hint: AppStrings.email.tr,
+            hintText: AppStrings.email.tr,
             keyboardType: TextInputType.emailAddress,
-            trailingSvg: AppImages.icLogiMail,
+            prefixIcon: SvgPicture.asset(
+              AppImages.icLogiMail,
+              width: 20,
+              height: 20,
+            ),
             controller: controller.emailController,
             validator: (value) {
               final RegExp emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
@@ -45,9 +54,9 @@ class RegisterFormWidget extends StatelessWidget {
           ),
           SizedBox(height: 12.h),
           CustomTextField(
-            hint: AppStrings.password.tr,
+            hintText: AppStrings.password.tr,
             controller: controller.passwordController,
-            obscure: true,
+            isPassword: true,
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Password is required';

@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import 'package:getx_structure_template/data/local/hive/hive_manager.dart';
+import '../data/local/hive/hive_manager.dart';
 
 import '../core/core.dart';
 import '../routes/app_pages.dart';

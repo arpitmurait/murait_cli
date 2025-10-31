@@ -2,8 +2,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:getx_structure_template/routes/app_pages.dart';
-import '/core/core.dart';
+import '../../routes/app_pages.dart';
+import '../../core/core.dart';
 import 'login_controller.dart';
 import 'widgets/login_form.dart';
 
