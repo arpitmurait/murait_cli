@@ -42,6 +42,12 @@ class PackageType {
   static String lints = 'flutter_lints: ^5.0.0';
 }
 
+/// Capitalizes the first letter of a string.
+/// Example: "home" -> "Home"
+String capitalize(String text) {
+  if (text.isEmpty) return text;
+  return text[0].toUpperCase() + text.substring(1);
+}
 
 /// Converts snake_case to PascalCase.
 /// Example: "edit_profile" -> "EditProfile", "user_profile_screen" -> "UserProfileScreen"
@@ -52,4 +58,25 @@ String toPascalCase(String text) {
       .where((word) => word.isNotEmpty)
       .map((word) => capitalize(word))
       .join();
+}
+
+/// Converts snake_case to camelCase.
+/// Example: "edit_profile" -> "editProfile", "user_profile_screen" -> "userProfileScreen"
+String toCamelCase(String text) {
+  if (text.isEmpty) return text;
+  final words = text.split('_').where((word) => word.isNotEmpty).toList();
+  if (words.isEmpty) return text;
+  return words.first.toLowerCase() +
+      words.skip(1).map((word) => capitalize(word)).join();
+}
+
+/// Converts snake_case to kebab-case.
+/// Example: "edit_profile" -> "edit-profile", "user_profile_screen" -> "user-profile-screen"
+String toKebabCase(String text) {
+  if (text.isEmpty) return text;
+  return text
+      .split('_')
+      .where((word) => word.isNotEmpty)
+      .map((word) => word.toLowerCase())
+      .join('-');
 }

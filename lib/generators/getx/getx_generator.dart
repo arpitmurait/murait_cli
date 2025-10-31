@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:murait_cli/generators/utils.dart' show toPascalCase;
+import 'package:murait_cli/generators/utils.dart' show toPascalCase, toCamelCase, toKebabCase;
 
 import 'templates.dart';
 
@@ -65,13 +65,17 @@ class GetXGenerator {
       return;
     }
 
+    final camelCaseName = toCamelCase(name);
+    final kebabCasePath = toKebabCase(name);
+    
     String content = file.readAsStringSync();
-    if (content.contains("static const $name = '/$name';")) {
+    if (content.contains("static const $camelCaseName =") || 
+        content.contains("static const $name =")) {
       print('⚠️ Route for $name already exists in app_routes.dart.');
       return;
     }
     // Add the new route string just before the closing brace of the class.
-    final newRoute = "  static const $name = '/$name';\n}";
+    final newRoute = "  static const $camelCaseName = '/$kebabCasePath';\n}";
     content = content.replaceAll(RegExp(r'}\s*$'), newRoute);
 
     file.writeAsStringSync(content);
@@ -111,12 +115,15 @@ class GetXGenerator {
     }
 
     // --- 2. Handle GetPage Entry ---
+    final camelCaseName = toCamelCase(name);
     final newPageEntry = '''
     GetPage(
-      name: AppRoutes.$name,
+      name: AppRoutes.$camelCaseName,
       page: () => ${toPascalCase(name)}Screen(),
     ),''';
-    bool pageExists = lines.any((line) => line.contains("name: AppRoutes.$name,"));
+    bool pageExists = lines.any((line) => 
+        line.contains("name: AppRoutes.$camelCaseName,") || 
+        line.contains("name: AppRoutes.$name,"));
 
     if (!pageExists) {
       int routesListEndIndex = lines.lastIndexWhere((line) => line.trim() == '];');
