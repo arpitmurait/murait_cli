@@ -42,9 +42,14 @@ class PackageType {
   static String lints = 'flutter_lints: ^5.0.0';
 }
 
-/// Capitalizes the first letter of a string.
-/// Example: "home" -> "Home"
-String capitalize(String text) {
+
+/// Converts snake_case to PascalCase.
+/// Example: "edit_profile" -> "EditProfile", "user_profile_screen" -> "UserProfileScreen"
+String toPascalCase(String text) {
   if (text.isEmpty) return text;
-  return text[0].toUpperCase() + text.substring(1);
+  return text
+      .split('_')
+      .where((word) => word.isNotEmpty)
+      .map((word) => capitalize(word))
+      .join();
 }

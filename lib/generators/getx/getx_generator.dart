@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:murait_cli/generators/utils.dart';
+import 'package:murait_cli/generators/utils.dart' show toPascalCase;
 
 import 'templates.dart';
 
@@ -114,7 +114,7 @@ class GetXGenerator {
     final newPageEntry = '''
     GetPage(
       name: AppRoutes.$name,
-      page: () => ${capitalize(name)}Screen(),
+      page: () => ${toPascalCase(name)}Screen(),
     ),''';
     bool pageExists = lines.any((line) => line.contains("name: AppRoutes.$name,"));
 

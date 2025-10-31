@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'utils.dart';
+import 'utils.dart' show toPascalCase;
 
 class BlocGenerator {
   void createBloc(String name, {bool withModel = false, bool withRepo = false}) {
@@ -35,42 +35,42 @@ import '${name}_event.dart';
 import '${name}_state.dart';
 ${withRepo ? "import '${name}_repository.dart';" : ""}
 
-class ${capitalize(name)}Bloc extends Bloc<${capitalize(name)}Event, ${capitalize(name)}State> {
-  ${withRepo ? "final ${capitalize(name)}Repository repository;\n  ${capitalize(name)}Bloc(this.repository)" : "${capitalize(name)}Bloc()"}
-      : super(${capitalize(name)}Initial()) {
-    on<${capitalize(name)}Started>((event, emit) async {
-      ${withRepo ? "final data = await repository.fetchData();\n      emit(${capitalize(name)}Loaded(data));" : "// TODO: Add event handling"}
+class ${toPascalCase(name)}Bloc extends Bloc<${toPascalCase(name)}Event, ${toPascalCase(name)}State> {
+  ${withRepo ? "final ${toPascalCase(name)}Repository repository;\n  ${toPascalCase(name)}Bloc(this.repository)" : "${toPascalCase(name)}Bloc()"}
+      : super(${toPascalCase(name)}Initial()) {
+    on<${toPascalCase(name)}Started>((event, emit) async {
+      ${withRepo ? "final data = await repository.fetchData();\n      emit(${toPascalCase(name)}Loaded(data));" : "// TODO: Add event handling"}
     });
   }
 }
 ''';
 
   String _eventTemplate(String name) => '''
-abstract class ${capitalize(name)}Event {}
+abstract class ${toPascalCase(name)}Event {}
 
-class ${capitalize(name)}Started extends ${capitalize(name)}Event {}
+class ${toPascalCase(name)}Started extends ${toPascalCase(name)}Event {}
 ''';
 
   String _stateTemplate(String name) => '''
-abstract class ${capitalize(name)}State {}
+abstract class ${toPascalCase(name)}State {}
 
-class ${capitalize(name)}Initial extends ${capitalize(name)}State {}
+class ${toPascalCase(name)}Initial extends ${toPascalCase(name)}State {}
 
-class ${capitalize(name)}Loaded extends ${capitalize(name)}State {
+class ${toPascalCase(name)}Loaded extends ${toPascalCase(name)}State {
   final dynamic data;
-  ${capitalize(name)}Loaded(this.data);
+  ${toPascalCase(name)}Loaded(this.data);
 }
 ''';
 
   String _modelTemplate(String name) => '''
-class ${capitalize(name)}Model {
+class ${toPascalCase(name)}Model {
   final int id;
   final String name;
 
-  ${capitalize(name)}Model({required this.id, required this.name});
+  ${toPascalCase(name)}Model({required this.id, required this.name});
 
-  factory ${capitalize(name)}Model.fromJson(Map<String, dynamic> json) {
-    return ${capitalize(name)}Model(
+  factory ${toPascalCase(name)}Model.fromJson(Map<String, dynamic> json) {
+    return ${toPascalCase(name)}Model(
       id: json['id'],
       name: json['name'],
     );
@@ -86,11 +86,11 @@ class ${capitalize(name)}Model {
   String _repoTemplate(String name) => '''
 import '${name}_model.dart';
 
-class ${capitalize(name)}Repository {
-  Future<${capitalize(name)}Model> fetchData() async {
+class ${toPascalCase(name)}Repository {
+  Future<${toPascalCase(name)}Model> fetchData() async {
     // TODO: Replace with API/DB call
     await Future.delayed(const Duration(seconds: 1));
-    return ${capitalize(name)}Model(id: 1, name: '${capitalize(name)} example');
+    return ${toPascalCase(name)}Model(id: 1, name: '${toPascalCase(name.replaceAll('_', ' '))} example');
   }
 }
 ''';
