@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:isolate';
 import 'package:murait_cli/generators/getx/templates.dart';
 import 'package:path/path.dart' as p;
 import 'package:process/process.dart';
@@ -13,34 +14,46 @@ class ProjectGenerator {
   Future<String?> _findPackageRoot() async {
     if (_packageRoot != null) return _packageRoot;
 
-    // Try to find the package using Platform.resolvedExecutable or Platform.script
+    // Method 1: Try using Isolate.resolvePackageUri to find the package location
+    // Resolve a file that definitely exists in the package
+    try {
+      final packageUri = await Isolate.resolvePackageUri(
+        Uri.parse('package:murait_cli/generators/getx/project_creator.dart')
+      );
+      if (packageUri != null && packageUri.scheme == 'file') {
+        // Convert package: URI to file path
+        var packagePath = packageUri.toFilePath(windows: Platform.isWindows);
+        // Navigate from lib/generators/getx/project_creator.dart to package root
+        var getxDir = Directory(p.dirname(packagePath)); // lib/generators/getx
+        var generatorsDir = getxDir.parent; // lib/generators
+        var libDir = generatorsDir.parent; // lib
+        var rootDir = libDir.parent; // package root
+        
+        final pubspecFile = File(p.join(rootDir.path, 'pubspec.yaml'));
+        if (await pubspecFile.exists()) {
+          final content = await pubspecFile.readAsString();
+          if (content.contains('name: murait_cli')) {
+            _packageRoot = rootDir.path;
+            return _packageRoot;
+          }
+        }
+      }
+    } catch (e) {
+      // Continue to other methods if this fails
+    }
+
+    // Method 2: Try using Platform.script to find the script location and traverse
     var scriptUri = Platform.script;
     var scriptPath = scriptUri.toFilePath(windows: Platform.isWindows);
     
-    // Get the home directory for pub-cache lookup
-    final homeDir = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '';
-    final pubCachePath = Platform.isWindows 
-        ? p.join(homeDir, 'AppData', 'Local', 'Pub', 'Cache')
-        : p.join(homeDir, '.pub-cache');
+    // Method 2a: Check if script is a snapshot or compiled, get source location
+    // For globally activated packages from git, the script might point to .dart_tool or cache
+    var scriptDir = Directory(p.dirname(scriptPath));
     
-    // First, try the global_packages location (for globally activated packages)
-    final globalPackagesPath = p.join(pubCachePath, 'global_packages', 'murait_cli');
-    final globalPackagesDir = Directory(globalPackagesPath);
-    if (await globalPackagesDir.exists()) {
-      final pubspecFile = File(p.join(globalPackagesDir.path, 'pubspec.yaml'));
-      if (await pubspecFile.exists()) {
-        final content = await pubspecFile.readAsString();
-        if (content.contains('name: murait_cli')) {
-          _packageRoot = globalPackagesDir.path;
-          return _packageRoot;
-        }
-      }
-    }
-    
-    // Fallback: traverse up from script location (for local development)
-    var currentDir = Directory(p.dirname(scriptPath));
+    // Traverse up from script location to find pubspec.yaml
+    var currentDir = scriptDir;
     var lastPath = '';
-    int maxIterations = 20; // Prevent infinite loops
+    int maxIterations = 30; // Prevent infinite loops
     int iterations = 0;
     
     while (iterations < maxIterations) {
@@ -63,6 +76,52 @@ class ProjectGenerator {
       if (!await currentDir.parent.exists()) break;
       currentDir = currentDir.parent;
       iterations++;
+    }
+
+    // Method 3: Try the global_packages location (for globally activated packages)
+    final homeDir = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '';
+    if (homeDir.isNotEmpty) {
+      final pubCachePath = Platform.isWindows 
+          ? p.join(homeDir, 'AppData', 'Local', 'Pub', 'Cache')
+          : p.join(homeDir, '.pub-cache');
+      
+      // Check global_packages
+      final globalPackagesPath = p.join(pubCachePath, 'global_packages', 'murait_cli');
+      final globalPackagesDir = Directory(globalPackagesPath);
+      if (await globalPackagesDir.exists()) {
+        final pubspecFile = File(p.join(globalPackagesDir.path, 'pubspec.yaml'));
+        if (await pubspecFile.exists()) {
+          final content = await pubspecFile.readAsString();
+          if (content.contains('name: murait_cli')) {
+            _packageRoot = globalPackagesDir.path;
+            return _packageRoot;
+          }
+        }
+      }
+      
+      // Check git cache location (for packages installed from git)
+      // When installing from git, packages are in git/cache/
+      final gitCachePath = p.join(pubCachePath, 'git', 'cache');
+      final gitCacheDir = Directory(gitCachePath);
+      if (await gitCacheDir.exists()) {
+        // Look for directories that might contain murait_cli
+        await for (var entity in gitCacheDir.list()) {
+          if (entity is Directory) {
+            final pubspecFile = File(p.join(entity.path, 'pubspec.yaml'));
+            if (await pubspecFile.exists()) {
+              try {
+                final content = await pubspecFile.readAsString();
+                if (content.contains('name: murait_cli')) {
+                  _packageRoot = entity.path;
+                  return _packageRoot;
+                }
+              } catch (e) {
+                // Continue searching
+              }
+            }
+          }
+        }
+      }
     }
 
     return null;
