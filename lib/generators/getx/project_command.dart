@@ -4,6 +4,7 @@ import 'package:args/command_runner.dart';
 import 'getx_generator.dart';
 import 'project_creator.dart';
 import 'util_generator.dart';
+import 'firebase_commands.dart';
 
 class AddCommand extends Command<void> {
   @override
@@ -16,6 +17,7 @@ class AddCommand extends Command<void> {
     addSubcommand(AddScreenCommand());
     addSubcommand(AddModelCommand());
     addSubcommand(AddRepositoryCommand());
+    addSubcommand(FirebaseCommand());
   }
 }
 
